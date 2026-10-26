@@ -1,0 +1,17 @@
+﻿export type Database = {
+  public: {
+    Tables: {
+      cvs: { Row: { id:string; user_id:string; file_path:string; file_name:string; extracted_text:string; analysis:unknown; created_at:string }; Insert: { id?:string; user_id:string; file_path:string; file_name:string; extracted_text:string; analysis?:unknown }; Update: { analysis?:unknown; file_name?:string }; Relationships: [] };
+      applications: {
+        Row: { id: string; user_id: string; company: string; role: string; status: "Applied" | "Interview" | "Rejected" | "Offer"; job_text: string; created_at: string };
+        Insert: { id?: string; user_id: string; company: string; role: string; status?: "Applied" | "Interview" | "Rejected" | "Offer"; job_text?: string; created_at?: string };
+        Update: { company?: string; role?: string; status?: "Applied" | "Interview" | "Rejected" | "Offer"; job_text?: string };
+        Relationships: [];
+      };
+    };
+    Views: Record<never, never>;
+    Functions: Record<never, never>;
+    Enums: Record<never, never>;
+    CompositeTypes: Record<never, never>;
+  };
+};

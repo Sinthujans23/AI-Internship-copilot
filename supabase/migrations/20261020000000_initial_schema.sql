@@ -1,0 +1,15 @@
+﻿create extension if not exists pgcrypto;
+create table if not exists public.cvs(id uuid primary key default gen_random_uuid(),user_id uuid not null references auth.users(id) on delete cascade,file_path text not null unique,file_name text not null,extracted_text text not null,analysis jsonb not null default '{}'::jsonb,created_at timestamptz not null default now());
+create table if not exists public.applications(id uuid primary key default gen_random_uuid(),user_id uuid not null references auth.users(id) on delete cascade,company text not null,role text not null,description text not null,match_score integer not null check(match_score between 0 and 100),status text not null default 'Applied' check(status in ('Applied','Interview','Rejected','Offer')),notes text not null default '',location text not null default '',applied_at timestamptz not null default now(),created_at timestamptz not null default now());
+create index if not exists cvs_user_created_idx on public.cvs(user_id,created_at desc);
+create index if not exists applications_user_applied_idx on public.applications(user_id,applied_at desc);
+create index if not exists applications_user_status_idx on public.applications(user_id,status);
+alter table public.cvs enable row level security;
+alter table public.applications enable row level security;
+drop policy if exists "Users manage their own CVs" on public.cvs;
+create policy "Users manage their own CVs" on public.cvs for all using(auth.uid()=user_id) with check(auth.uid()=user_id);
+drop policy if exists "Users manage their own applications" on public.applications;
+create policy "Users manage their own applications" on public.applications for all using(auth.uid()=user_id) with check(auth.uid()=user_id);
+insert into storage.buckets(id,name,public,file_size_limit,allowed_mime_types) values('cvs','cvs',false,8388608,array['application/pdf']) on conflict(id) do update set public=false,file_size_limit=8388608,allowed_mime_types=array['application/pdf'];
+drop policy if exists "Users access own CV files" on storage.objects;
+create policy "Users access own CV files" on storage.objects for all to authenticated using(bucket_id='cvs' and (storage.foldername(name))[1]=auth.uid()::text) with check(bucket_id='cvs' and (storage.foldername(name))[1]=auth.uid()::text);
