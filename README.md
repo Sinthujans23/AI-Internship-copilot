@@ -29,7 +29,7 @@ Get these from your Supabase project's Connect dialog / API settings. Use the pu
 
 Open Supabase **SQL Editor**, create a query, paste the entire contents of `supabase/migrations/20261026000000_step1_applications.sql`, and run it.
 
-For Step 1, run only this SQL file. It works on a fresh project and also upgrades the earlier prototype applications table without deleting its rows. It creates the requested `id`, `user_id`, `company`, `role`, `status`, `job_text`, and `created_at` columns, plus an ownership index and Row Level Security. `job_text` is optional in the form and stored as an empty string if omitted.
+For Step 1, run only this SQL file. It works on a fresh project and also upgrades the earlier prototype applications table without deleting its rows. It creates the requested `id`, `user_id`, `company`, `role`, `status`, `job_text`, `match_score`, and `created_at` columns, plus an ownership index and Row Level Security. `job_text` is optional in the form and stored as an empty string if omitted. `match_score` is nullable until Step 4 calculates it; scores must be integers from 0 to 100. If you ran the earlier Step 1 SQL, run this updated file again to add `match_score` safely.
 
 RLS permits authenticated users to select, insert, update, and delete only their own rows. Updates cannot transfer a row to another user. API routes also check the user, set `user_id` on the server, and filter by ownership.
 
@@ -81,6 +81,8 @@ npm.cmd run build
 ```
 
 Real signup, persistence, and RLS checks require your configured Supabase project and the SQL above. The repository contains earlier prototype CV/AI files; they are not part of this step and are not linked from the Step 1 UI.
+
+**Current pause:** both Supabase environment values are blank. Create or choose a Supabase project, fill in `.env.local`, run the updated Step 1 SQL, and configure the callback above. Then run acceptance checks 1–9. Tell me when these are done (or share the error text) so we can finish Step 1 validation before implementing Step 2. Do not paste secret keys into chat.
 
 ## Files for Step 1
 

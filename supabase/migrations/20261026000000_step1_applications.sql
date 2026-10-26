@@ -9,11 +9,16 @@ create table if not exists public.applications (
   status text not null default 'Applied'
     check (status in ('Applied', 'Interview', 'Rejected', 'Offer')),
   job_text text not null default '' check (length(job_text) <= 20000),
+  -- Leave this null until the matching service computes a real score.
+  match_score integer check (match_score between 0 and 100),
   created_at timestamptz not null default now()
 );
 
 -- Preserve rows if the earlier prototype schema was already installed.
 alter table public.applications add column if not exists job_text text not null default '';
+-- Safe to rerun if you applied the earlier version of the Step 1 SQL.
+alter table public.applications add column if not exists match_score integer
+  check (match_score between 0 and 100);
 do $$
 begin
   if exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'applications' and column_name = 'description') then
