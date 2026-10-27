@@ -26,12 +26,22 @@ export function verifyFacts(input: CompanyFacts, sources: ResearchSource[]): Com
     scope: input.scope === "job_post" && !role ? "unknown" : input.scope, role,
     locations: input.locations.filter(fact => named(fact) && inScope(fact)).slice(0, 10), work_mode: workSupported ? work : null,
     salary, technologies: input.technologies.filter(fact => named(fact) && inScope(fact)).slice(0, 25),
+    requirements: (input.requirements || []).filter(fact => named(fact) && inScope(fact)).slice(0, 10),
+    responsibilities: (input.responsibilities || []).filter(fact => named(fact) && inScope(fact)).slice(0, 8),
+    application_instructions: (input.application_instructions || []).filter(fact => named(fact) && inScope(fact)).slice(0, 5),
     certifications: input.certifications.filter(fact => named(fact) && inScope(fact) && /certif|credential|accredit/i.test(fact.quote)).slice(0, 10),
   };
 }
 export function verifyCoaching(coaching: Coaching, cvText: string): Coaching {
   const numbers = (value: string): string[] => value.match(/\b\d+(?:\.\d+)?%?/g) || [];
   return { ...coaching,
+    cv_additions: (coaching.cv_additions || []).slice(0, 6),
+    application_checklist: (coaching.application_checklist || []).slice(0, 6),
+    interview_preparation: {
+      introduction_outline: (coaching.interview_preparation?.introduction_outline || []).slice(0, 5),
+      practice_questions: (coaching.interview_preparation?.practice_questions || []).slice(0, 6).map(item => ({ ...item, answer_outline: item.answer_outline.slice(0, 4) })),
+      questions_to_ask: (coaching.interview_preparation?.questions_to_ask || []).slice(0, 6),
+    },
     cv_changes: coaching.cv_changes.filter(change => quoteExists(change.original_quote, cvText) && numbers(change.suggested_text).every(number => numbers(change.original_quote).includes(number))).slice(0, 5),
     project_upgrades: (coaching.project_upgrades || []).filter(upgrade => quoteExists(upgrade.project_quote, cvText)).slice(0, 3).map(upgrade => ({ ...upgrade, implementation_steps: upgrade.implementation_steps.slice(0, 5) })),
     interview_answers: coaching.interview_answers.filter(answer => quoteExists(answer.project_quote, cvText)).slice(0, 5),

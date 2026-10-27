@@ -22,11 +22,15 @@ export const factsSchema = z.object({
   work_mode: z.object({ value: z.enum(["Remote", "Hybrid", "On-site"]), ...evidence }).strict().nullable(),
   salary: z.object({ minimum: z.number().nullable(), maximum: z.number().nullable(), currency: z.string(), period: z.enum(["monthly", "yearly", "hourly"]), ...evidence }).strict().nullable(),
   technologies: z.array(sourcedFact), certifications: z.array(sourcedFact),
+  requirements: z.array(sourcedFact), responsibilities: z.array(sourcedFact), application_instructions: z.array(sourcedFact),
 }).strict();
 export type CompanyFacts = z.infer<typeof factsSchema>;
 export type ResearchSource = { url: string; title: string; text: string; retrieved_at: string };
 export const coachingSchema = z.object({
   fit_summary: z.string(),
+  cv_additions: z.array(z.object({ section: z.string(), suggestion: z.string(), evidence_needed: z.string() }).strict()),
+  application_checklist: z.array(z.string()),
+  interview_preparation: z.object({ introduction_outline: z.array(z.string()), practice_questions: z.array(z.object({ question: z.string(), why_practice: z.string(), answer_outline: z.array(z.string()) }).strict()), questions_to_ask: z.array(z.string()) }).strict(),
   cv_changes: z.array(z.object({ original_quote: z.string(), suggested_text: z.string(), reason: z.string() }).strict()),
   project_upgrades: z.array(z.object({ project_quote: z.string(), suggested_feature: z.string(), why_for_company: z.string(), implementation_steps: z.array(z.string()) }).strict()),
   email: z.object({ subject: z.string(), body: z.string() }).strict(),

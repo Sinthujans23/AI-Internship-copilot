@@ -21,7 +21,7 @@ test("DNS guard rejects mixed public/private answers and returns only an approve
   assert.equal((await resolvePublicHost("example.com", async () => [{ address: "8.8.8.8", family: 4 }])).address, "8.8.8.8");
 });
 const source = { url: "https://example.com/job", title: "Job", text: "Remote Python role in Colombo. Salary LKR 100,000–150,000 monthly. AWS certification preferred.", retrieved_at: new Date().toISOString() };
-const facts: CompanyFacts = { scope: "job_post", role: null, locations: [{ value: "Colombo", source_index: 0, quote: "role in Colombo" }], work_mode: { value: "Remote", source_index: 0, quote: "Remote Python role" }, salary: { minimum: 100000, maximum: 150000, currency: "LKR", period: "monthly", source_index: 0, quote: "Salary LKR 100,000–150,000 monthly" }, technologies: [{ value: "Python", source_index: 0, quote: "Remote Python role" }, { value: "React", source_index: 0, quote: "We use React" }], certifications: [{ value: "AWS", source_index: 0, quote: "AWS certification preferred" }] };
+const facts: CompanyFacts = { requirements: [], responsibilities: [], application_instructions: [], scope: "job_post", role: null, locations: [{ value: "Colombo", source_index: 0, quote: "role in Colombo" }], work_mode: { value: "Remote", source_index: 0, quote: "Remote Python role" }, salary: { minimum: 100000, maximum: 150000, currency: "LKR", period: "monthly", source_index: 0, quote: "Salary LKR 100,000–150,000 monthly" }, technologies: [{ value: "Python", source_index: 0, quote: "Remote Python role" }, { value: "React", source_index: 0, quote: "We use React" }], certifications: [{ value: "AWS", source_index: 0, quote: "AWS certification preferred" }] };
 test("unsupported technology and invented salary amounts are discarded", () => {
   assert.deepEqual(verifyFacts(facts, [source]).technologies.map(fact => fact.value), ["Python"]);
   assert.equal(verifyFacts({ ...facts, salary: { ...facts.salary!, minimum: 999999 } }, [source]).salary, null);
@@ -48,7 +48,16 @@ test("job salary and technologies are not merged from different role pages", () 
   assert.equal(result.salary, null);
 });
 test("CV edits cannot invent metrics and interview answers need CV project evidence", () => {
-  const coaching: Coaching = { fit_summary: "", email: { subject: "", body: "" }, learning_plan: [], project_upgrades: [], similar_company_leads: [], cv_changes: [{ original_quote: "Built a Python API", suggested_text: "Built a Python API serving 1000 users", reason: "" }], interview_answers: [{ question: "", project_quote: "Led a team of 50", suggested_answer: "", follow_up: "" }] };
+  const coaching: Coaching = { cv_additions: [], application_checklist: [], interview_preparation: { introduction_outline: [], practice_questions: [], questions_to_ask: [] }, fit_summary: "", email: { subject: "", body: "" }, learning_plan: [], project_upgrades: [], similar_company_leads: [], cv_changes: [{ original_quote: "Built a Python API", suggested_text: "Built a Python API serving 1000 users", reason: "" }], interview_answers: [{ question: "", project_quote: "Led a team of 50", suggested_answer: "", follow_up: "" }] };
   const result = verifyCoaching(coaching, "Built a Python API for a student project.");
   assert.equal(result.cv_changes.length, 0); assert.equal(result.interview_answers.length, 0);
+});
+
+test("non-stack requirements and application instructions require quoted evidence from the selected role", () => {
+  const page = { ...source, text: "Frontend Intern. Degree preferred. Build dashboards. Apply through our careers portal." };
+  const fact = (value: string, index = 0) => ({ value, quote: value, source_index: index });
+  const result = verifyFacts({ ...facts, role: fact("Frontend Intern"), requirements: [fact("Degree preferred"), fact("Five years required")], responsibilities: [fact("Build dashboards"), fact("Remote Python role", 1)], application_instructions: [fact("Apply through our careers portal"), fact("Email recruiter@example.com")] }, [page, source]);
+  assert.deepEqual(result.requirements.map(item => item.value), ["Degree preferred"]);
+  assert.deepEqual(result.responsibilities.map(item => item.value), ["Build dashboards"]);
+  assert.deepEqual(result.application_instructions.map(item => item.value), ["Apply through our careers portal"]);
 });

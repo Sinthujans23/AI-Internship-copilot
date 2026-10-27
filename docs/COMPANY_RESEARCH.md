@@ -25,3 +25,11 @@ The app reads the supplied page and up to two same-origin careers/jobs/engineeri
 After applying SQL, test preferences saving/refresh, a readable employer URL, a direct job URL, a site with no salary/certifications, a service outage, report persistence/deletion, and another account's isolation. Check every quoted employer fact against its linked page. A blocked/JavaScript site must show a readable error. Original source pages can change after a report; timestamps and CV identity identify the snapshot.
 
 Each report can open its source CV in the [PDF region editor](PDF_EDITOR.md) with suggestions available to apply to a selected block. Original PDF layout regions are retained, with explicit font/fit limitations and approval before saving a new version.
+
+## Expanded application preparation
+
+New reports include source-quoted non-stack requirements, responsibilities and application instructions, scoped to the selected job page. Preferred/required wording is preserved. If the input is only a general company website, the report labels its signals as general and asks for a vacancy link; it does not infer internal hiring requirements from the website framework.
+
+Coaching now adds suggested CV sections with evidence the student must have, a tailored application checklist, an introduction outline, technical/behavioral practice questions with answer prompts, and questions the student can ask the interviewer. Existing learning tasks, grounded project answers, project upgrades, CV rewrites and copyable email remain. Practice questions are recommendations, not confirmed company questions. No recipient is guessed and no email is sent.
+
+No new migration is needed: these fields are saved in `company_reports.result`. Existing reports remain readable, with a rerun notice for expanded coaching. Analyze the same company/direct-vacancy link again with the latest CV and target role. Verify sources, review the proposed CV additions and email, refresh to confirm persistence. AI generation still needs a valid provider key and credits; numerical skill matching also needs the running matching service.
