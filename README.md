@@ -46,6 +46,8 @@ The signup page redirects confirmation links to the callback route, which exchan
 
 ## 4. Run
 
+If an error points to `createServerClient` in middleware, check that `NEXT_PUBLIC_SUPABASE_URL` is the actual full Project URL beginning with `https://`, copied from Supabase. A project name or placeholder such as `your-project-url` is not a URL. The app now checks the URL before creating its clients and redirects to a setup message for missing or malformed configuration. Restart the server after correcting `.env.local`. A correctly formatted URL and nonempty key still need to belong to a real Supabase project.
+
 ```powershell
 npm.cmd run dev
 ```

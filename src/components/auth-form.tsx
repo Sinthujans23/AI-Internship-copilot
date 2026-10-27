@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { supabaseSetupMessage } from "@/lib/supabase/config";
 
 export function AuthForm({ mode, errorCode }: { mode: "login" | "signup"; errorCode?: string }) {
   const router = useRouter();
@@ -14,7 +15,7 @@ export function AuthForm({ mode, errorCode }: { mode: "login" | "signup"; errorC
   const [message, setMessage] = useState("");
   const signingUp = mode === "signup";
   const callbackError = errorCode === "configuration"
-    ? "Add your Supabase URL and anon key to .env.local, then restart the app."
+    ? supabaseSetupMessage
     : errorCode ? "Email confirmation failed. Please sign in or try the confirmation link again." : "";
 
   async function submit(event: FormEvent<HTMLFormElement>) {

@@ -1,9 +1,10 @@
 ﻿import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { ApplicationTracker } from "@/components/application-tracker";
+import { getSupabaseConfig } from "@/lib/supabase/config";
 
 export default async function Dashboard() {
-  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+  if (!getSupabaseConfig()) {
     redirect("/login?error=configuration");
   }
   const supabase = await createClient();

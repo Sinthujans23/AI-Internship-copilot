@@ -1,13 +1,14 @@
 ﻿import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import type { Database } from "@/types/database";
+import { getSupabaseConfig } from "@/lib/supabase/config";
 
 // Next.js 15 middleware refreshes sessions before server pages read them.
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({ request });
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!url || !key) return response;
+  const settings = getSupabaseConfig();
+  if (!settings) return response;
+  const { url, key } = settings;
   const supabase = createServerClient<Database>(url, key, {
     cookies: {
       getAll: () => request.cookies.getAll(),

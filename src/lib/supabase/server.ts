@@ -1,13 +1,12 @@
 ﻿import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import type { Database } from "@/types/database";
+import { getSupabaseConfig, supabaseSetupMessage } from "./config";
 
 export async function createClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!url || !key) {
-    throw new Error("Supabase is not configured. Fill in .env.local and restart the server.");
-  }
+  const settings = getSupabaseConfig();
+  if (!settings) throw new Error(supabaseSetupMessage);
+  const { url, key } = settings;
   const cookieStore = await cookies();
   return createServerClient<Database>(url, key, {
     cookies: {
