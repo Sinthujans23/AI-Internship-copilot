@@ -22,7 +22,7 @@ Test: upload a small text-based CV PDF, inspect its text and skill chips, refres
 
 Changed: `matching-service/*`, Next.js matching/context helpers, `/api/match`, dashboard match component, database types/queries, env template, and Step 4 SQL.
 
-Run the Step 4 SQL. Follow `matching-service/README.md` to start FastAPI on port 8000. Configure the same `MATCHING_SERVICE_API_KEY` on both servers and the service URL in `.env.local`; the service also needs `OPENAI_API_KEY`. Start Next.js and click **Check CV match** for a saved job after uploading your CV. Refresh to see the persisted result. A manually added job is analyzed first when it has no structured requirements.
+Run the Step 4 SQL. Follow `matching-service/README.md` to start FastAPI on port 18000. Configure the same `MATCHING_SERVICE_API_KEY` on both servers and the service URL in `.env.local`; the service also needs `OPENAI_API_KEY`. Start Next.js and click **Check CV match** for a saved job after uploading your CV. Refresh to see the persisted result. A manually added job is analyzed first when it has no structured requirements.
 
 Run `python -m unittest -v` from `matching-service`. Four offline tests cover similarity/missing skills, exact matching, malformed/zero vectors, endpoint validation, and service authentication. Live semantic quality and provider access require a real embedding API key. No skills in a job returns an error instead of an arbitrary score.
 

@@ -1,5 +1,7 @@
 # Matching service
 
+From the repository root, start the local service with `npm.cmd run dev:matching`. This supplies the application folder, env file, watch folder, and port 18000 automatically. If port 8000 reports WinError 10013, another process may already own it; this setup avoids that occupied port without changing firewall rules or stopping unrelated processes.
+
 Python 3.11+; FastAPI with OpenAI `text-embedding-3-small` embeddings and cosine similarity. No local model or PyTorch download is needed. CV text and skill names are sent to OpenAI for embedding.
 
 ```powershell
@@ -9,10 +11,10 @@ python -m venv .venv
 Copy-Item .env.example .env
 ```
 
-Fill `.env` with your `OPENAI_API_KEY` and a random `MATCHING_SERVICE_API_KEY`. Put the same service key in the Next.js `.env.local`, together with `MATCHING_SERVICE_URL=http://127.0.0.1:8000`.
+Fill `.env` with your `OPENAI_API_KEY` and a random `MATCHING_SERVICE_API_KEY`. Put the same service key in the Next.js `.env.local`, together with `MATCHING_SERVICE_URL=http://127.0.0.1:18000`.
 
 ```powershell
-.venv\Scripts\python.exe -m uvicorn main:app --host 127.0.0.1 --port 8000 --reload
+.venv\Scripts\python.exe -m uvicorn main:app --host 127.0.0.1 --port 18000 --reload
 .venv\Scripts\python.exe -m unittest -v
 ```
 

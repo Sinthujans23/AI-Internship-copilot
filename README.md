@@ -76,13 +76,15 @@ Enable email/password authentication. Set Site URL to `http://localhost:3000` an
 
 ## 3. Start both servers
 
+Quick matching-service command from the repository root: `npm.cmd run dev:matching`. Keep it running in its own terminal. It uses port 18000; do not start a second copy on the same port.
+
 Terminal 1:
 
 ```powershell
 cd matching-service
 python -m venv .venv
 .venv\Scripts\python.exe -m pip install -r requirements.txt
-.venv\Scripts\python.exe -m uvicorn main:app --host 127.0.0.1 --port 8000 --reload
+.venv\Scripts\python.exe -m uvicorn main:app --host 127.0.0.1 --port 18000 --reload
 ```
 
 Terminal 2, from the repository root:
@@ -103,7 +105,7 @@ The development server uses `.next-dev`; production builds use `.next`, so build
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Next.js | Public anon/publishable key, never a service-role/secret key |
 | `OPENAI_API_KEY` | Next.js and FastAPI | Private key for LLM output and embeddings |
 | `OPENAI_MODEL` | Next.js | Defaults to `gpt-4o-mini`; must support strict output and tools |
-| `MATCHING_SERVICE_URL` | Next.js | `http://127.0.0.1:8000` locally; Render HTTPS origin in production |
+| `MATCHING_SERVICE_URL` | Next.js | `http://127.0.0.1:18000` locally; Render HTTPS origin in production |
 | `MATCHING_SERVICE_API_KEY` | Both servers | Same random private service key; sent in `X-API-Key` |
 | `EMBEDDING_MODEL` | FastAPI | Defaults to `text-embedding-3-small` |
 | `MATCH_THRESHOLD` | FastAPI | Similarity threshold, default `0.65` |

@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "test": "tsx --test tests/*.test.ts",
     "setup:env": "node scripts/setup-env.mjs",
-    "sql": "node scripts/build-sql.mjs"
+    "sql": "node scripts/build-sql.mjs",
+    "dev:matching": "python -m uvicorn main:app --app-dir matching-service --env-file matching-service/.env --host 127.0.0.1 --port 18000 --reload --reload-dir matching-service"
   },
   "dependencies": {
     "@supabase/ssr": "^0.6.1",
