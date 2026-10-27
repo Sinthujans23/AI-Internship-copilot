@@ -225,3 +225,9 @@ Test: upload a CV; open `/jobs`; edit role/location and internship/remote filter
 The application tracker screen and Applications navigation item have been removed. Old `/dashboard` and `/applications` bookmarks redirect to `/profile`. Job analysis no longer offers Save as application, since the tracker is no longer available. CV Profile, job discovery/analysis and company preparation remain accessible. Existing application database rows and backend APIs are retained; this UI change does not delete stored data. Earlier tracker setup/testing sections describe the previous version.
 
 Check: run `npm.cmd run dev`, log in, and confirm the navigation contains CV profile, Analyze job and Company shortlist. Visit `/dashboard` and `/applications` to confirm they lead to CV Profile; analyze a job and confirm the tracker save/link controls are absent.
+
+## Job page simplified
+
+The manual **Analyze a job post** textarea/form and **Use in job analysis** buttons have been removed. `/jobs` now contains public job search, profile skill overlap and external platform/source links; its navigation label is **Find jobs**. Company shortlist analysis remains available. Older manual-job-analysis instructions above describe the previous UI.
+
+Run `npm.cmd run dev`, open `/jobs`, and confirm the manual text box is absent while filters, results and external links remain.

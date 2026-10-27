@@ -3,7 +3,6 @@ import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import type { JobSearch, RankedJob } from "@/lib/job-search";
 import { platformSearches } from "@/lib/job-search-links";
-import { JobAnalyzer } from "./job-analyzer";
 
 export function JobDiscovery({ initial, hasCv, initialWarning }: { initial: JobSearch; hasCv: boolean; initialWarning: string }) {
   const [query, setQuery] = useState(initial);
@@ -13,7 +12,6 @@ export function JobDiscovery({ initial, hasCv, initialWarning }: { initial: JobS
   const [warnings, setWarnings] = useState<string[]>([]);
   const [searched, setSearched] = useState(false);
   const [cvName, setCvName] = useState("");
-  const [selected, setSelected] = useState<{ id: string; text: string } | null>(null);
   function change(next: JobSearch) { setQuery(next); setSearched(false); setJobs([]); setWarnings([]); }
   async function search(event: FormEvent) {
     event.preventDefault(); setBusy(true); setError(""); setWarnings([]); setJobs([]); setSearched(false);
@@ -26,7 +24,7 @@ export function JobDiscovery({ initial, hasCv, initialWarning }: { initial: JobS
     finally { setBusy(false); }
   }
   return <div className="space-y-8">
-    <header><h1 className="text-3xl font-bold">Find jobs for your profile</h1><p className="mt-2 text-slate-600">Search public listings, compare mentioned skills with your latest CV, and analyze a job you like.</p></header>
+    <header><h1 className="text-3xl font-bold">Find jobs for your profile</h1><p className="mt-2 text-slate-600">Search public listings, compare mentioned skills with your latest CV, and open the original listing to apply.</p></header>
     {initialWarning && <p role="alert" className="rounded bg-amber-50 p-3">{initialWarning}</p>}
     {!hasCv && <p className="rounded bg-violet-50 p-4"><Link href="/profile" className="underline">Upload your CV</Link> to rank public jobs. External platform search links work below without a CV.</p>}
     <form onSubmit={search} className="space-y-4 rounded-xl border bg-white p-5">
@@ -44,9 +42,8 @@ export function JobDiscovery({ initial, hasCv, initialWarning }: { initial: JobS
         <p className="text-sm text-slate-600">{job.source} · {job.remote ? "Remote listed — check restrictions" : "Remote not indicated"}{job.published ? ` · Posted ${job.published.slice(0, 10)}` : ""}</p>
         <p className="text-sm">Shared skills: {job.matched_skills.join(", ") || "None recognized"}</p><p className="text-sm">Other skills mentioned: {job.other_skills.join(", ") || "None recognized"}</p>
         <p className="whitespace-pre-line text-sm text-slate-600">{job.description.slice(0, 350)}{job.description.length > 350 ? "…" : ""}</p>
-        <div className="flex flex-wrap gap-4"><a href={job.url} target="_blank" rel="noopener noreferrer" className="text-violet-700 underline">View on {job.source} ↗</a><button onClick={() => { setSelected({ id: job.id, text: `${job.title}\nCompany: ${job.company}\nLocation: ${job.location}\nSource: ${job.url}\n\n${job.description}`.slice(0, 20000) }); document.getElementById("job-analysis")?.scrollIntoView({ behavior: "smooth" }); }} className="text-violet-700 underline">Use in job analysis</button></div>
+        <div className="flex flex-wrap gap-4"><a href={job.url} target="_blank" rel="noopener noreferrer" className="text-violet-700 underline">View on {job.source} ↗</a></div>
       </article>)}
     </section>}
-    <section id="job-analysis" className="scroll-mt-6 border-t pt-6"><p className="mb-4 text-sm text-slate-600">Select a listing above or paste any job description. AI analysis uses your configured provider and may require credits.</p><JobAnalyzer key={selected?.id || "manual"} initialText={selected?.text} /></section>
   </div>;
 }
