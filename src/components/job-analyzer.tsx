@@ -4,8 +4,8 @@ import Link from "next/link";
 import type { JobDetails } from "@/lib/job-schema";
 import { SkillChips } from "@/components/skill-chips";
 
-export function JobAnalyzer() {
-  const [text, setText] = useState("");
+export function JobAnalyzer({ initialText = "" }: { initialText?: string }) {
+  const [text, setText] = useState(initialText);
   const [result, setResult] = useState<JobDetails | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
