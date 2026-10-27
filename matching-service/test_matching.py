@@ -3,7 +3,10 @@ import unittest
 from unittest.mock import AsyncMock, patch
 
 from fastapi.testclient import TestClient
-from main import app
+from main import app, embed_texts
+import asyncio
+import httpx
+from fastapi import HTTPException
 from matching import cosine, score_embeddings
 
 
@@ -33,6 +36,23 @@ class MatchingTests(unittest.TestCase):
             response = client.post("/match", json=body, headers=headers)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["score"], 50)
+
+
+    @patch.dict(os.environ, {"AI_PROVIDER": "openrouter", "OPENROUTER_API_KEY": "test-router-key", "OPENROUTER_EMBEDDING_MODEL": "openai/text-embedding-3-small"})
+    def test_openrouter_embedding_route_and_billing(self):
+        response = httpx.Response(200, json={"data": [{"index": 0, "embedding": [1.0, 0.0]}]})
+        with patch("main.httpx.AsyncClient") as factory:
+            client = factory.return_value.__aenter__.return_value
+            client.post = AsyncMock(return_value=response)
+            self.assertEqual(asyncio.run(embed_texts(["Python"])), [[1.0, 0.0]])
+            args = client.post.call_args
+            self.assertEqual(args.args[0], "https://openrouter.ai/api/v1/embeddings")
+            self.assertEqual(args.kwargs["headers"]["Authorization"], "Bearer test-router-key")
+            self.assertEqual(args.kwargs["json"]["model"], "openai/text-embedding-3-small")
+            client.post.return_value = httpx.Response(402, json={})
+            with self.assertRaises(HTTPException) as failure:
+                asyncio.run(embed_texts(["Python"]))
+            self.assertEqual(failure.exception.status_code, 402)
 
 
 if __name__ == "__main__":

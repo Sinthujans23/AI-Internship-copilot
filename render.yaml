@@ -7,6 +7,12 @@ services:
     startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /health
     envVars:
+      - key: AI_PROVIDER
+        value: openrouter
+      - key: OPENROUTER_API_KEY
+        sync: false
+      - key: OPENROUTER_EMBEDDING_MODEL
+        value: openai/text-embedding-3-small
       - key: OPENAI_API_KEY
         sync: false
       - key: MATCHING_SERVICE_API_KEY

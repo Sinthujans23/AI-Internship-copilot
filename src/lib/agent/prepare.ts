@@ -1,5 +1,5 @@
 import type { Database } from "@/types/database";
-import { getOpenAI } from "@/lib/services/openai";
+import { getOpenAI, aiModel, providerOptions } from "@/lib/services/openai";
 import { analyzeJobPost } from "@/lib/ai/analyze-job";
 import { structuredOutput } from "@/lib/ai/structured";
 import { jobSchema, type JobDetails } from "@/lib/job-schema";
@@ -23,8 +23,8 @@ export async function prepareApplication(application: AppRow, cv: CvRow) {
     const final = await runToolLoop(async (messages, tools) => {
       if (Date.now() - started > 240000) throw new AppError("Preparation timed out. Please retry.", 504);
       const response = await client.chat.completions.create({
-        model: process.env.OPENAI_MODEL || "gpt-4o-mini", messages,
-        ...(tools.length ? { tools, tool_choice: "auto" as const, parallel_tool_calls: false } : {}),
+        model: aiModel(), ...providerOptions(), messages,
+        ...(tools.length ? { tools, tool_choice: "auto" as const, ...(process.env.AI_PROVIDER === "openrouter" ? {} : { parallel_tool_calls: false }) } : {}),
         max_tokens: 1000,
       });
       if (response.choices[0]?.finish_reason === "length") throw new AppError("The agent response was incomplete. Please retry.", 502);

@@ -52,14 +52,22 @@ app.include_router(pdf_router, dependencies=[Depends(require_service_key)])
 
 
 async def embed_texts(texts: list[str]) -> list[list[float]]:
-    key = os.getenv("OPENAI_API_KEY")
+    router = os.getenv("AI_PROVIDER") == "openrouter"
+    key_name = "OPENROUTER_API_KEY" if router else "OPENAI_API_KEY"
+    key = os.getenv(key_name)
+    base = "https://openrouter.ai/api/v1" if router else "https://api.openai.com/v1"
+    model = os.getenv("OPENROUTER_EMBEDDING_MODEL", "openai/text-embedding-3-small") if router else os.getenv("EMBEDDING_MODEL", "text-embedding-3-small")
     if not key:
-        raise HTTPException(503, "Configure OPENAI_API_KEY in the matching service")
+        raise HTTPException(503, f"Configure {key_name} in the matching service")
     try:
         async with httpx.AsyncClient(timeout=40) as client:
-            response = await client.post("https://api.openai.com/v1/embeddings",
-                headers={"Authorization": f"Bearer {key}"},
-                json={"model": os.getenv("EMBEDDING_MODEL", "text-embedding-3-small"), "input": texts})
+            response = await client.post(f"{base}/embeddings",
+                headers={"Authorization": f"Bearer {key.strip()}"},
+                json={"model": model, "input": texts, "encoding_format": "float"})
+        if response.status_code == 401:
+            raise HTTPException(503, f"Embedding provider rejected {key_name}. Update the matching service key and restart.")
+        if response.status_code == 402:
+            raise HTTPException(402, "OpenRouter embedding credits are insufficient. Check billing and key spending limits.")
         if response.status_code == 429:
             raise HTTPException(429, "Embedding API quota or rate limit reached")
         if not response.is_success:

@@ -1,4 +1,4 @@
-﻿# AI Internship Copilot
+# AI Internship Copilot
 
 A full-stack student application workspace. Paste a job post, upload a CV, compare skill alignment, draft application materials, and track each application.
 
@@ -195,3 +195,11 @@ If analysis reports **OpenAI rejected the API key**, the provider returned an au
 ## References
 
 Implementation uses the official [Supabase SSR guide](https://supabase.com/docs/guides/auth/server-side/creating-a-client), [RLS documentation](https://supabase.com/docs/guides/database/postgres/row-level-security), [OpenAI structured outputs](https://developers.openai.com/api/docs/guides/structured-outputs), [function calling](https://developers.openai.com/api/docs/guides/function-calling), and [embeddings guide](https://developers.openai.com/api/docs/guides/embeddings). Deployment sources are linked in the deployment guide.
+
+## OpenRouter setup
+
+The current local configuration selects OpenRouter. Put `OPENROUTER_API_KEY` in both `.env.local` and `matching-service/.env`; never put a real key in the example files. Both services need `AI_PROVIDER=openrouter`. Next.js uses `OPENROUTER_MODEL=openai/gpt-4.1-mini`; Python uses `OPENROUTER_EMBEDDING_MODEL=openai/text-embedding-3-small`. Restart both services after saving. These are paid OpenRouter models; OpenRouter credits/key limits apply independently of your OpenAI balance.
+
+Run `npm.cmd run dev` and, in another terminal, `npm.cmd run dev:matching`. Test job JSON at `/jobs`, matching with a saved CV/job, then the dashboard agent and `/companies`. Requests require schema/tool-compatible endpoints and still validate returned JSON. No direct OpenAI fallback is made if OpenRouter fails. To select direct OpenAI instead, set `AI_PROVIDER=openai` in both environments and supply the existing OpenAI settings.
+
+On Vercel configure the same web variables; on Render configure the Python variables and shared matching key. See [OpenRouter structured outputs](https://openrouter.ai/docs/guides/features/structured-outputs) and [embeddings](https://openrouter.ai/docs/api/reference/embeddings).
