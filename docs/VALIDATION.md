@@ -25,3 +25,9 @@ The real-PDF regression exposed an old parser failure on a PDF independently rea
 - Deploy to Vercel/Render, configure production callbacks/env values, and run the production checklist in `DEPLOYMENT.md`.
 
 Offline tests and anonymous route checks do not establish live provider access, end-to-end signed-in behavior, or successful hosting deployment.
+
+## AI authentication follow-up
+
+A read-only OpenAI model-access request returned HTTP 401 with `invalid_api_key`. No generation request was made and no key value/provider message was printed. Replacing the key requires the user's OpenAI account; model generation access and billing have not been verified.
+
+The app now distinguishes invalid API keys, model access, quota exhaustion, rate limits, and connection failures using fixed public messages. Build/lint passed and the expanded TypeScript suite passed all 17 tests, including three provider-error classification/redaction regressions.

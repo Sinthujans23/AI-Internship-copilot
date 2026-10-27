@@ -3,6 +3,7 @@ import { zodResponseFormat } from "openai/helpers/zod";
 import { z } from "zod";
 import { getOpenAI } from "@/lib/services/openai";
 import { AppError } from "@/lib/api";
+import { providerErrorDetails } from "./provider-error";
 
 export function validateAIJson<T>(content: string, schema: z.ZodType<T>): T {
   try { return schema.parse(JSON.parse(content)); }
@@ -24,7 +25,10 @@ export async function structuredOutput<T>(schema: z.ZodType<T>, name: string, in
     if (!choice || choice.finish_reason !== "stop" || !choice.message.content) throw new AppError("The AI response was incomplete. Please retry.", 502);
     return validateAIJson(choice.message.content, schema);
   } catch (error) {
-    if (error instanceof OpenAI.APIError) throw new AppError(error.status === 429 ? "AI quota or rate limit reached. Check API billing and try later." : "The AI provider is unavailable. Check the model setting and try again.", error.status === 429 ? 429 : 502);
+    if (error instanceof OpenAI.APIError) {
+      const details = providerErrorDetails(error);
+      throw new AppError(details.message, details.status);
+    }
     throw error;
   }
 }

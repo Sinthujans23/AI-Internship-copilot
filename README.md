@@ -177,6 +177,8 @@ This project provides practice with:
 
 ## Known limitations
 
+If analysis reports **OpenAI rejected the API key**, the provider returned an authentication error. Replace `OPENAI_API_KEY` with an active key from your OpenAI API project in both `.env.local` and `matching-service/.env`, then restart both servers. A Supabase key or ChatGPT login/password cannot authenticate OpenAI API requests. Error messages distinguish invalid keys, model access, rate limits, and exhausted credits without displaying provider key fragments.
+
 - Live AI requires a valid API key, model access, billing/quota, and outbound network access; embeddings also incur provider usage. Hosting/email plan limits and cold starts can delay or reject requests.
 - PDFs are limited to 4 MB and 50,000 extracted characters. Scanned/image-only or encrypted PDFs need OCR/unlocking outside this app.
 - The newest CV is used; no CV selector or automatic regeneration after replacement. Saved drafts identify their CV and creation time; re-run preparation after changes. Historical CV content may remain in saved application drafts until you delete those applications.
