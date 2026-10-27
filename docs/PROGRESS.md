@@ -6,7 +6,7 @@ Complete steps in order. Each implementation gets build/lint checks and a Git co
 | --- | --- | --- |
 | 0 | Setup | Complete: development login page returned HTTP 200; build and lint passed (two existing warnings) |
 | 1 | Auth + application tracker | Local implementation build/lint passed (two existing warnings); nullable match_score added; Supabase configuration and live checks pending |
-| 2 | Job post to JSON | Pending |
+| 2 | Job post to JSON | Implemented; live acceptance requires OpenAI key and Step 2 SQL |
 | 3 | CV upload + parse | Pending |
 | 4 | Python matching service | Pending |
 | 5 | AI agent with tools | Pending |
