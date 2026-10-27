@@ -38,7 +38,6 @@ export function JobDiscovery({ initial, hasCv, initialWarning }: { initial: JobS
       <h2 className="font-semibold">Your automatic search</h2>
       <p>{role} | {location || "All listed locations"} | {remote ? "Remote only" : "All work modes"} | {internships ? "Internship / trainee / student titles" : "All experience levels"}</p>
       <p className="text-sm text-slate-600">Sources: Arbeitnow Europe and UK. Up to 100 recent jobs per feed, refreshed every six hours. Mostly European coverage; LinkedIn and Indeed listings are not included. Remote roles may still have country restrictions.</p>
-      <Link href="/companies" className="inline-block text-sm text-violet-700 underline">Manage saved career preferences</Link>
     </section>
     {busy && <p role="status" className="rounded bg-violet-50 p-4">Finding jobs for your CV automatically...</p>}
     {error && <p role="alert" className="rounded bg-red-50 p-3 text-red-800">{error}</p>}

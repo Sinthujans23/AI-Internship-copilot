@@ -237,3 +237,9 @@ Run `npm.cmd run dev`, open `/jobs`, and confirm the manual text box is absent w
 `/jobs` automatically searches on opening, using saved career role/location/remote preferences and the latest CV skills. The manual search form and external LinkedIn/Indeed search buttons were removed. Only source listing links remain for reviewing/applying. No new API key is needed. LinkedIn/Indeed job ingestion is not implemented; the automatic feeds remain Arbeitnow Europe/UK. No results or unavailable feeds are shown honestly rather than fabricating matches. Missing preferences use an explicitly labeled Software Engineering Intern default. Requests are canceled when leaving the page.
 
 Run `npm.cmd run dev`, upload a CV, save career preferences in Company shortlist, then open `/jobs`. Confirm results load without a click, there is no manual search form, and source links work. Check the no-CV, no-results and unavailable-source messages. Earlier search-form instructions above describe a previous UI.
+
+## Company requirements form removed
+
+The **Your requirements** form has been removed from Company Shortlist. Company links, analysis and saved reports remain. Previously saved preferences are still loaded; otherwise existing defaults apply. Research does not overwrite saved preferences. The job page no longer links to the removed form. No database changes are required.
+
+Run `npm.cmd run dev`, open `/companies`, and verify only the company links form and report list appear below the introduction. Existing reports should still load.
