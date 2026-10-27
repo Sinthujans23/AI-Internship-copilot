@@ -1,18 +1,6 @@
-﻿import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
-import { ApplicationTracker } from "@/components/application-tracker";
-import { getSupabaseConfig } from "@/lib/supabase/config";
+import { redirect } from "next/navigation";
 
-export default async function Dashboard() {
-  if (!getSupabaseConfig()) {
-    redirect("/login?error=configuration");
-  }
-  const supabase = await createClient();
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-  if (authError || !user) redirect("/login");
-  // Read fresh database rows whenever the page is opened or refreshed.
-  const { data, error } = await supabase.from("applications")
-    .select("id,user_id,company,role,status,job_text,job_analysis,match_score,match_result,agent_result,created_at")
-    .eq("user_id", user.id).order("created_at", { ascending: false });
-  return <ApplicationTracker initialApplications={data || []} initialError={error ? "Could not load applications. Run the entire supabase/setup.sql in Supabase SQL Editor to apply the latest schema." : ""} />;
+// Older tracker bookmarks now open the CV-first workspace.
+export default function LegacyTrackerPage() {
+  redirect("/profile");
 }

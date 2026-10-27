@@ -1,6 +1,6 @@
-﻿import { redirect } from "next/navigation";
+import { redirect } from "next/navigation";
 
-// Keep old bookmarks working; the Step 1 tracker lives on the dashboard.
-export default function Applications() {
-  redirect("/dashboard");
+// Older tracker bookmarks now open the CV-first workspace.
+export default function LegacyTrackerPage() {
+  redirect("/profile");
 }
