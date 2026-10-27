@@ -54,6 +54,8 @@ npm.cmd run dev
 
 Open `http://localhost:3000/signup`. Routes:
 
+Development uses `.next-dev` and production builds use `.next`, so running a build cannot overwrite an active development server's generated files. After pulling this configuration change, restart `npm.cmd run dev` if your terminal does not restart automatically.
+
 - `/signup`: email/password registration
 - `/login`: email/password login
 - `/logout`: logout form; the dashboard also has a Log out button
