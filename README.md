@@ -6,6 +6,8 @@ Implementation for Steps 0–6 is present. Build/lint and offline tests validate
 
 ## Features
 
+- `/companies`: private career preferences and company-link shortlisting, source-backed stack/role/pay/work-mode evidence, CV similarity as a percentage and `/10`, grounded CV edits, email draft, learning tasks, project interview practice, and clearly unverified similar-company research leads. See [company research guide](docs/COMPANY_RESEARCH.md).
+
 - Supabase email/password signup, confirmation resend, login, logout, and protected workspace.
 - Application add/list/status update/delete, search, filters, and real status counts.
 - `/jobs`: structured job analysis into `{ role, company, skills_required, good_to_have, responsibilities }`, with server validation and save-to-tracker.

@@ -11,6 +11,8 @@ Complete steps in order. Each implementation gets build/lint checks and a Git co
 | 4 | Python matching service | Implemented; four Python tests passed; live embeddings require API key and service startup |
 | 5 | AI agent with tools | Implemented; eight offline TypeScript tests passed; live preparation requires OpenAI key, matching service, and Step 5 SQL |
 | 6 | Polish + deploy | Build/lint/typecheck, 14 TS tests, four Python tests, and production route/service smoke checks passed; hosting/live acceptance remain manual |
+| 7 | Company shortlist and coaching | Preferences, source-backed company reports and coaching implemented; new migration and live provider checks required |
+| 8 | Original PDF region editor | In progress; preserves original PDF and uses explicit text-region preview before saving a new version |
 
 The initial Git snapshot preserves earlier prototype code. It has now been replaced by the supported structured job analyzer, profile, FastAPI service, and bounded tool-calling agent. Each step's implementation was checked and committed in order. Build/offline tests do not establish live account, provider, or hosting acceptance.
 
