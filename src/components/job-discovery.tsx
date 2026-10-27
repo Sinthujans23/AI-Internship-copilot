@@ -1,10 +1,17 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import type { JobSearch, RankedJob } from "@/lib/job-search";
+import { CareerRequirements } from "./career-requirements";
+import type { CareerPreferences } from "@/lib/company/schema";
+import type { RankedJob } from "@/lib/job-search";
 
-export function JobDiscovery({ initial, hasCv, initialWarning }: { initial: JobSearch; hasCv: boolean; initialWarning: string }) {
-  const { role, location, remote, internships } = initial;
+export function JobDiscovery({ initial, hasCv, initialWarning }: { initial: CareerPreferences; hasCv: boolean; initialWarning: string }) {
+  const [preferences, setPreferences] = useState(initial);
+  const [revision, setRevision] = useState(0);
+  const role = preferences.target_role.slice(0, 120);
+  const location = preferences.locations[0] || "";
+  const remote = preferences.work_mode === "Remote";
+  const internships = true;
   const [jobs, setJobs] = useState<RankedJob[]>([]);
   const [busy, setBusy] = useState(hasCv);
   const [error, setError] = useState("");
@@ -29,11 +36,12 @@ export function JobDiscovery({ initial, hasCv, initialWarning }: { initial: JobS
     }
     void search();
     return () => controller.abort();
-  }, [hasCv, role, location, remote, internships]);
+  }, [hasCv, role, location, remote, internships, revision]);
   return <div className="space-y-8">
     <header><h1 className="text-3xl font-bold">Find jobs for your profile</h1><p className="mt-2 text-slate-600">Jobs are found automatically using your saved career preferences and ranked against your latest CV skills.</p></header>
-    {initialWarning && <p role="alert" className="rounded bg-amber-50 p-3">{initialWarning}</p>}
+    {initialWarning && revision === 0 && <p role="alert" className="rounded bg-amber-50 p-3">{initialWarning}</p>}
     {!hasCv && <p className="rounded bg-violet-50 p-4"><Link href="/profile" className="underline">Upload your CV</Link> to receive automatic job recommendations.</p>}
+    <CareerRequirements initial={initial} onSaved={value => { setPreferences(value); setRevision(current => current + 1); }} />
     <section className="space-y-2 rounded-xl border bg-white p-5">
       <h2 className="font-semibold">Your automatic search</h2>
       <p>{role} | {location || "All listed locations"} | {remote ? "Remote only" : "All work modes"} | {internships ? "Internship / trainee / student titles" : "All experience levels"}</p>

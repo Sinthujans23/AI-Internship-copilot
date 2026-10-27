@@ -243,3 +243,9 @@ Run `npm.cmd run dev`, upload a CV, save career preferences in Company shortlist
 The **Your requirements** form has been removed from Company Shortlist. Company links, analysis and saved reports remain. Previously saved preferences are still loaded; otherwise existing defaults apply. Research does not overwrite saved preferences. The job page no longer links to the removed form. No database changes are required.
 
 Run `npm.cmd run dev`, open `/companies`, and verify only the company links form and report list appear below the introduction. Existing reports should still load.
+
+## Requirements now live in Find Jobs
+
+The complete **Your requirements** form is on `/jobs`, including role, locations, work mode, currency, salary range/period and notes. Saving validates and persists the existing owner-scoped career preferences, then automatically reloads job recommendations without a separate Search button. Refresh reloads saved values; company research continues using those same preferences. The form remains absent from Company Shortlist. Job feeds currently filter role, first location and Remote only; salary/Hybrid/On-site and additional locations are not verified by this search. The form explains these limits.
+
+Test with `npm.cmd run dev`: open Find Jobs, edit requirements, Save, confirm automatic refresh and persistence after browser refresh. A failed save must show an error without applying draft preferences. No new SQL or API keys are needed.
