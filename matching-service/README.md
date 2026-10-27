@@ -2,6 +2,8 @@
 
 From the repository root, start the local service with `npm.cmd run dev:matching`. This supplies the application folder, env file, watch folder, and port 18000 automatically. If port 8000 reports WinError 10013, another process may already own it; this setup avoids that occupied port without changing firewall rules or stopping unrelated processes.
 
+Install the updated requirements in `.venv` for PDF editing. The launcher now chooses that environment automatically. Private `/pdf/inspect` and `/pdf/edit` endpoints render original CV pages and apply bounded text-region edits using PyMuPDF. See `../docs/PDF_EDITOR.md` for supported layouts and review/save behavior. OpenAI is not used for PDF editing itself.
+
 Python 3.11+; FastAPI with OpenAI `text-embedding-3-small` embeddings and cosine similarity. No local model or PyTorch download is needed. CV text and skill names are sent to OpenAI for embedding.
 
 ```powershell

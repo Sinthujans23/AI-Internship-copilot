@@ -1,6 +1,7 @@
 "use client";
 import { useState, type FormEvent } from "react";
 import type { Database } from "@/types/database";
+import Link from "next/link";
 
 type Cv = Database["public"]["Tables"]["cvs"]["Row"];
 export function CvProfile({ initialCvs, initialError }: { initialCvs: Cv[]; initialError: string }) {
@@ -46,6 +47,7 @@ export function CvProfile({ initialCvs, initialError }: { initialCvs: Cv[]; init
     {cvs.map((cv, index) => <section key={cv.id} className="space-y-4 rounded-xl border bg-white p-5">
       <div className="flex flex-wrap items-center justify-between gap-3"><h2 className="break-all text-lg font-semibold">{cv.file_name} {index === 0 && <span className="text-sm text-violet-700">(Current)</span>}</h2><button disabled={busy} onClick={() => void remove(cv.id)} className="rounded border border-red-200 px-3 py-2 text-red-700">Delete CV</button></div>
       <div className="flex flex-wrap gap-2">{cv.skills.map(skill => <span key={skill} className="rounded-full bg-violet-50 px-3 py-1 text-sm text-violet-800">{skill}</span>)}</div>
+      <div className="flex flex-wrap gap-4 text-sm"><Link href={`/profile/pdf?cv_id=${encodeURIComponent(cv.id)}`} className="text-violet-700 underline">Edit original PDF layout</Link><a href={`/api/cvs/download?cv_id=${encodeURIComponent(cv.id)}`} className="text-violet-700 underline">Download PDF</a></div>
       {!cv.skills.length && <p className="text-slate-600">No skills recognized by the initial vocabulary. Your full CV text is still available for matching.</p>}
       <details open={index === 0}><summary className="cursor-pointer font-medium">Extracted text</summary><pre className="mt-3 max-h-96 overflow-auto whitespace-pre-wrap break-words rounded bg-slate-50 p-3 font-sans">{cv.extracted_text}</pre></details>
     </section>)}

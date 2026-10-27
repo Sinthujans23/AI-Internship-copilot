@@ -18,11 +18,23 @@ export function companyUrl(input: string) {
   return url;
 }
 
-async function readHtml(url: URL): Promise<{ html: string; redirect?: string }> {
-  const hostname = url.hostname.replace(/^\[|\]$/g, "");
-  const addresses = await lookup(hostname, { all: true });
+type AddressResolver = (hostname: string) => Promise<{ address: string; family: number }[]>;
+export async function resolvePublicHost(hostname: string, resolver: AddressResolver = name => lookup(name, { all: true }), timeoutMs = 8000) {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  let addresses: { address: string; family: number }[];
+  try {
+    addresses = await Promise.race([resolver(hostname), new Promise<never>((_, reject) => { timer = setTimeout(() => reject(new Error("DNS timeout")), Math.max(1, timeoutMs)); })]);
+  } catch { throw new AppError("Could not resolve the company website. Check the public URL.", 422); }
+  finally { clearTimeout(timer); }
   if (!addresses.length || addresses.some(address => !isPublicAddress(address.address))) throw new AppError("The website resolves to a private or reserved address.", 400);
-  const pinned = addresses.find(address => address.family === 4) || addresses[0];
+  return addresses.find(address => address.family === 4) || addresses[0];
+}
+
+async function readHtml(url: URL, deadline: number): Promise<{ html: string; redirect?: string }> {
+  if (Date.now() >= deadline) throw new AppError("Website research timed out. Use a direct job-post link.", 422);
+  const hostname = url.hostname.replace(/^\[|\]$/g, "");
+  const pinned = await resolvePublicHost(hostname, undefined, Math.min(8000, deadline - Date.now()));
+  if (Date.now() >= deadline) throw new AppError("Website research timed out. Use a direct job-post link.", 422);
   return new Promise((resolve, reject) => {
     // Pin the validated DNS result; redirects are revalidated separately.
     const req = request(url, {
@@ -32,7 +44,7 @@ async function readHtml(url: URL): Promise<{ html: string; redirect?: string }> 
     }, response => {
       const status = response.statusCode || 500;
       if ([301, 302, 303, 307, 308].includes(status) && response.headers.location) { response.resume(); resolve({ html: "", redirect: new URL(response.headers.location, url).href }); return; }
-      if (status !== 200 || !/text\/html|application\/xhtml\+xml/i.test(response.headers["content-type"] || "")) { response.resume(); reject(new AppError("The website could not be read as a public HTML page. Try a direct careers/job link.", 422)); return; }
+      if (status !== 200 || !/text\/html|application\/xhtml\+xml/i.test(response.headers["content-type"] || "") || (response.headers["content-encoding"] && response.headers["content-encoding"] !== "identity")) { response.resume(); reject(new AppError("The website could not be read as a public HTML page. Try a direct careers/job link.", 422)); return; }
       const chunks: Buffer[] = []; let length = 0;
       response.on("data", (chunk: Buffer) => {
         length += chunk.length;
@@ -42,7 +54,7 @@ async function readHtml(url: URL): Promise<{ html: string; redirect?: string }> 
       response.on("end", () => resolve({ html: Buffer.concat(chunks).toString("utf8") }));
       response.on("error", () => reject(new AppError("The website connection was interrupted.", 502)));
     });
-    const timer = setTimeout(() => req.destroy(), 12000);
+    const timer = setTimeout(() => req.destroy(), Math.max(1, Math.min(12000, deadline - Date.now())));
     req.on("close", () => clearTimeout(timer));
     req.on("error", () => reject(new AppError("Could not read the website. It may block automated access or require JavaScript; use a direct job link.", 422)));
     req.end();
@@ -63,10 +75,10 @@ export function extractWebsite(html: string, url: string) {
   return { title, text, related: [...new Set(related)].filter(value => value !== url).slice(0, 2) };
 }
 
-async function fetchSource(input: string) {
+async function fetchSource(input: string, deadline: number) {
   let url = companyUrl(input);
   for (let redirects = 0; redirects <= 3; redirects++) {
-    const result = await readHtml(url);
+    const result = await readHtml(url, deadline);
     if (result.redirect) { url = companyUrl(result.redirect); continue; }
     const extracted = extractWebsite(result.html, url.href);
     if (extracted.text.length < 80) throw new AppError("Not enough readable website text. Use a direct, public job-post URL.", 422);
@@ -75,10 +87,12 @@ async function fetchSource(input: string) {
   throw new AppError("Too many website redirects. Use the final public page URL.", 422);
 }
 export async function fetchCompanySources(input: string) {
-  const first = await fetchSource(input);
+  const deadline = Date.now() + 35000;
+  const first = await fetchSource(input, deadline);
   const sources = [first.source];
   for (const link of first.related) {
-    try { const next = await fetchSource(link); if (!sources.some(source => source.url === next.source.url)) sources.push(next.source); }
+    if (Date.now() >= deadline - 1000) break;
+    try { const next = await fetchSource(link, deadline); if (!sources.some(source => source.url === next.source.url)) sources.push(next.source); }
     catch { /* A blocked extra page must not invalidate the readable primary page. */ }
   }
   return sources;

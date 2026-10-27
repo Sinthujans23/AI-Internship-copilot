@@ -28,6 +28,7 @@ export type ResearchSource = { url: string; title: string; text: string; retriev
 export const coachingSchema = z.object({
   fit_summary: z.string(),
   cv_changes: z.array(z.object({ original_quote: z.string(), suggested_text: z.string(), reason: z.string() }).strict()),
+  project_upgrades: z.array(z.object({ project_quote: z.string(), suggested_feature: z.string(), why_for_company: z.string(), implementation_steps: z.array(z.string()) }).strict()),
   email: z.object({ subject: z.string(), body: z.string() }).strict(),
   learning_plan: z.array(z.object({ skill: z.string(), priority: z.enum(["High", "Medium", "Low"]), reason: z.string(), practice_task: z.string(), course_topic: z.string() }).strict()),
   interview_answers: z.array(z.object({ question: z.string(), project_quote: z.string(), suggested_answer: z.string(), follow_up: z.string() }).strict()),

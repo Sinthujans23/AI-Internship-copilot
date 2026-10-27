@@ -19,7 +19,7 @@ export async function structuredOutput<T>(schema: z.ZodType<T>, name: string, in
         { role: "user", content: JSON.stringify(input) },
       ],
       response_format: zodResponseFormat(schema, name), max_tokens: maxTokens,
-    });
+    }, { timeout: maxTokens > 4500 ? 60000 : 30000 });
     const choice = response.choices[0];
     if (choice?.message.refusal) throw new AppError("The AI could not process this content. Try different input.", 422);
     if (!choice || choice.finish_reason !== "stop" || !choice.message.content) throw new AppError("The AI response was incomplete. Please retry.", 502);

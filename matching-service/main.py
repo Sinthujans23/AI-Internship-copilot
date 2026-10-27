@@ -9,6 +9,7 @@ from fastapi import Depends, FastAPI, Header, HTTPException
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from matching import score_embeddings
+from pdf_routes import router as pdf_router
 
 load_dotenv()
 app = FastAPI(title="AI Internship Copilot Matching", version="1.0.0")
@@ -45,6 +46,9 @@ def require_service_key(x_api_key: str | None = Header(default=None)):
         raise HTTPException(503, "Configure MATCHING_SERVICE_API_KEY")
     if not x_api_key or not hmac.compare_digest(x_api_key.encode(), expected.encode()):
         raise HTTPException(401, "Invalid service key")
+
+
+app.include_router(pdf_router, dependencies=[Depends(require_service_key)])
 
 
 async def embed_texts(texts: list[str]) -> list[list[float]]:

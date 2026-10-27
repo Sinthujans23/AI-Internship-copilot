@@ -7,6 +7,7 @@ Implementation for Steps 0–6 is present. Build/lint and offline tests validate
 ## Features
 
 - `/companies`: private career preferences and company-link shortlisting, source-backed stack/role/pay/work-mode evidence, CV similarity as a percentage and `/10`, grounded CV edits, email draft, learning tasks, project interview practice, and clearly unverified similar-company research leads. See [company research guide](docs/COMPANY_RESEARCH.md).
+- Original-layout PDF region editor: select text blocks, queue company-tailored changes, preview fit/layout, download or save a new current CV while retaining the original. See [PDF editor setup and limitations](docs/PDF_EDITOR.md).
 
 - Supabase email/password signup, confirmation resend, login, logout, and protected workspace.
 - Application add/list/status update/delete, search, filters, and real status counts.
@@ -99,6 +100,8 @@ Open `http://localhost:3000/signup`. After confirmation/login, upload a CV at `/
 
 The development server uses `.next-dev`; production builds use `.next`, so building does not corrupt a running dev server. If a port is busy, stop the duplicate server or update the Supabase redirect URLs to match the port actually used. Production preview: `npm.cmd run build`, then `npm.cmd start`.
 
+For the company/PDF extension, rerun `supabase/setup.sql`, install the updated matching-service requirements into `matching-service/.venv`, and restart `npm.cmd run dev:matching`. The launcher prefers that environment. The company page is `/companies`; PDF editors are linked from `/profile` and saved company reports. New tables `career_preferences` and `company_reports` have private ownership RLS.
+
 ## Environment variables
 
 | Variable | Where | Purpose |
@@ -156,7 +159,7 @@ npm.cmd run lint
 npm.cmd run typecheck
 npm.cmd run build
 cd matching-service
-python -m unittest -v
+.venv\Scripts\python.exe -m unittest -v
 ```
 
 TypeScript tests use fake tool/provider responses; FastAPI tests mock embeddings. They test validation, tool execution order and limits, data isolation, error handling, and scoring without paid calls. They do not prove email delivery, real RLS enforcement, model quality, or deployed persistence. Perform the two-account live tests above.

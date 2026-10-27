@@ -5,7 +5,7 @@ import { preferencesSchema } from "@/lib/company/schema";
 import { researchCompany } from "@/lib/company/research";
 
 export const runtime = "nodejs";
-export const maxDuration = 180;
+export const maxDuration = 240;
 export async function GET() {
   try {
     const { supabase, user } = await requireUser();

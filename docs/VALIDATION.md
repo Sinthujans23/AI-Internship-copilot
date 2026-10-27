@@ -1,5 +1,14 @@
 # Validation record — 2026-10-27
 
+## Company research and PDF editor extension
+
+- Production build and lint passed; 26 TypeScript tests and 11 Python tests passed.
+- Production HTTP checks confirmed login redirects for company/PDF pages and 401 responses for anonymous company preferences, research, PDF editing and downloads.
+- A real local PDF service rejected missing credentials, inspected a synthetic two-page CV and returned an edited PDF. The Next.js parser extracted the replacement and confirmed removal of the old text.
+- PDF tests compare unchanged page/heading pixels and page geometry, preserve the source bytes, and reject overflow, invalid edits and text over scanned images.
+- Website tests cover URL/DNS protections, source evidence, salary units, role isolation and technology word boundaries. A public HTML fetch also succeeded without sending CV data or making a paid AI call.
+- Signed-in storage saves, company generation with a valid AI key, two-user isolation and deployment still require manual acceptance. Run the updated SQL before using company research.
+
 ## Passed locally
 
 - Every Step 2–5 implementation passed `npm.cmd run lint` and `npm.cmd run build` before its named Git commit. The obsolete prototype's unused-variable warning was removed in Step 6.

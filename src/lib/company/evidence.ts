@@ -4,29 +4,36 @@ export const normalizeQuote = (value: string) => value.toLowerCase().replace(/\s
 export function quoteExists(quote: string, text: string) {
   return quote.trim().length >= 4 && normalizeQuote(text).includes(normalizeQuote(quote));
 }
+function namesValue(quote: string, value: string) {
+  const escaped = normalizeQuote(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return new RegExp(`(^|[^\\p{L}\\p{N}+#])${escaped}(?=$|[^\\p{L}\\p{N}+#])`, "u").test(normalizeQuote(quote));
+}
 export function verifyFacts(input: CompanyFacts, sources: ResearchSource[]): CompanyFacts {
   const supports = (fact: { source_index: number; quote: string }) => Number.isInteger(fact.source_index) && !!sources[fact.source_index] && quoteExists(fact.quote, sources[fact.source_index].text);
-  const named = (fact: { value: string; source_index: number; quote: string }) => supports(fact) && !!fact.value.trim() && normalizeQuote(fact.quote).includes(normalizeQuote(fact.value));
+  const named = (fact: { value: string; source_index: number; quote: string }) => supports(fact) && !!fact.value.trim() && namesValue(fact.quote, fact.value);
+  const role = input.role && named(input.role) ? input.role : null;
+  const inScope = (fact: { source_index: number }) => input.scope !== "job_post" || !role || fact.source_index === role.source_index;
   const work = input.work_mode;
-  const workSupported = work && supports(work) && (work.value === "On-site" ? /on.?site|in.?office|office.based/i.test(work.quote) : normalizeQuote(work.quote).includes(work.value.toLowerCase()));
+  const workSupported = work && supports(work) && inScope(work) && (work.value === "On-site" ? /on.?site|in.?office|office.based/i.test(work.quote) : normalizeQuote(work.quote).includes(work.value.toLowerCase()));
   let salary = input.salary;
   if (salary) {
     const periods = { monthly: /month/i, yearly: /year|annual|annum/i, hourly: /hour/i };
     const numbers = salary.quote.replaceAll(",", "").match(/\d+(?:\.\d+)?\s*[kKmM]?/g)?.map(token => parseFloat(token) * (/k/i.test(token) ? 1000 : /m/i.test(token) ? 1000000 : 1)) || [];
     const limits = [salary.minimum, salary.maximum].filter((value): value is number => value !== null);
-    if (!supports(salary) || !/^[A-Z]{3}$/.test(salary.currency) || !salary.quote.toUpperCase().includes(salary.currency) || !periods[salary.period].test(salary.quote) || !limits.length || limits.some(value => !Number.isFinite(value) || value < 0 || !numbers.includes(value)) || (salary.minimum !== null && salary.maximum !== null && salary.minimum > salary.maximum)) salary = null;
+    if (!supports(salary) || !inScope(salary) || !/^[A-Z]{3}$/.test(salary.currency) || !new RegExp(`(^|[^A-Z])${salary.currency}($|[^A-Z])`).test(salary.quote.toUpperCase()) || !periods[salary.period].test(salary.quote) || !limits.length || limits.some(value => !Number.isFinite(value) || value < 0 || !numbers.includes(value)) || (salary.minimum !== null && salary.maximum !== null && salary.minimum > salary.maximum)) salary = null;
   }
   return {
-    scope: input.scope, role: input.role && named(input.role) ? input.role : null,
-    locations: input.locations.filter(named).slice(0, 10), work_mode: workSupported ? work : null,
-    salary, technologies: input.technologies.filter(named).slice(0, 25),
-    certifications: input.certifications.filter(fact => named(fact) && /certif|credential|accredit/i.test(fact.quote)).slice(0, 10),
+    scope: input.scope === "job_post" && !role ? "unknown" : input.scope, role,
+    locations: input.locations.filter(fact => named(fact) && inScope(fact)).slice(0, 10), work_mode: workSupported ? work : null,
+    salary, technologies: input.technologies.filter(fact => named(fact) && inScope(fact)).slice(0, 25),
+    certifications: input.certifications.filter(fact => named(fact) && inScope(fact) && /certif|credential|accredit/i.test(fact.quote)).slice(0, 10),
   };
 }
 export function verifyCoaching(coaching: Coaching, cvText: string): Coaching {
   const numbers = (value: string): string[] => value.match(/\b\d+(?:\.\d+)?%?/g) || [];
   return { ...coaching,
     cv_changes: coaching.cv_changes.filter(change => quoteExists(change.original_quote, cvText) && numbers(change.suggested_text).every(number => numbers(change.original_quote).includes(number))).slice(0, 5),
+    project_upgrades: (coaching.project_upgrades || []).filter(upgrade => quoteExists(upgrade.project_quote, cvText)).slice(0, 3).map(upgrade => ({ ...upgrade, implementation_steps: upgrade.implementation_steps.slice(0, 5) })),
     interview_answers: coaching.interview_answers.filter(answer => quoteExists(answer.project_quote, cvText)).slice(0, 5),
     learning_plan: coaching.learning_plan.slice(0, 8), similar_company_leads: coaching.similar_company_leads.slice(0, 4),
   };
