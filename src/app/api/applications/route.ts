@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { applicationSchema, statusUpdateSchema } from "@/lib/applications";
 
 // Select only the Step 1 columns, including when upgrading the old schema.
-const columns = "id,user_id,company,role,status,job_text,job_analysis,match_score,match_result,created_at";
+const columns = "id,user_id,company,role,status,job_text,job_analysis,match_score,match_result,agent_result,created_at";
 export const dynamic = "force-dynamic";
 
 function failure(error: unknown) {

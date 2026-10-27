@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
+import OpenAI from "openai";
 
 export class AppError extends Error {
   constructor(message: string, public status = 500) { super(message); }
@@ -12,6 +13,7 @@ export async function requireUser() {
   return { supabase, user };
 }
 export function apiError(error: unknown) {
+  if (error instanceof OpenAI.APIError) return NextResponse.json({ error: error.status === 429 ? "AI quota or rate limit reached. Check your API billing and try later." : "The AI provider request failed. Check your model and API key settings." }, { status: error.status === 429 ? 429 : 502 });
   if (error instanceof AppError) return NextResponse.json({ error: error.message }, { status: error.status });
   if (error instanceof z.ZodError) return NextResponse.json({ error: error.issues[0]?.message || "Invalid input." }, { status: 400 });
   if (error instanceof SyntaxError) return NextResponse.json({ error: "Send valid JSON." }, { status: 400 });

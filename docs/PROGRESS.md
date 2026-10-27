@@ -9,7 +9,7 @@ Complete steps in order. Each implementation gets build/lint checks and a Git co
 | 2 | Job post to JSON | Implemented; live acceptance requires OpenAI key and Step 2 SQL |
 | 3 | CV upload + parse | Implemented; live upload/ownership checks require Step 3 SQL and a signed-in user |
 | 4 | Python matching service | Implemented; four Python tests passed; live embeddings require API key and service startup |
-| 5 | AI agent with tools | Pending |
+| 5 | AI agent with tools | Implemented; eight offline TypeScript tests passed; live preparation requires OpenAI key, matching service, and Step 5 SQL |
 | 6 | Polish + deploy | Pending |
 
 Earlier prototype AI/CV files are preserved in the initial repository snapshot. They do not establish completion of Steps 2–5. Later steps will follow the requested API contracts and use a separate FastAPI service.

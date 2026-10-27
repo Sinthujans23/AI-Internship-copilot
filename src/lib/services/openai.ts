@@ -2,5 +2,5 @@
 export function getOpenAI() {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) throw new Error("AI analysis is not configured. Add OPENAI_API_KEY to the server environment.");
-  return new OpenAI({ apiKey, timeout: 45000, maxRetries: 1 });
+  return new OpenAI({ apiKey, timeout: 30000, maxRetries: 0 });
 }

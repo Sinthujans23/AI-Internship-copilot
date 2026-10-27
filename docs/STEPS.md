@@ -25,3 +25,13 @@ Changed: `matching-service/*`, Next.js matching/context helpers, `/api/match`, d
 Run the Step 4 SQL. Follow `matching-service/README.md` to start FastAPI on port 8000. Configure the same `MATCHING_SERVICE_API_KEY` on both servers and the service URL in `.env.local`; the service also needs `OPENAI_API_KEY`. Start Next.js and click **Check CV match** for a saved job after uploading your CV. Refresh to see the persisted result. A manually added job is analyzed first when it has no structured requirements.
 
 Run `python -m unittest -v` from `matching-service`. Four offline tests cover similarity/missing skills, exact matching, malformed/zero vectors, endpoint validation, and service authentication. Live semantic quality and provider access require a real embedding API key. No skills in a job returns an error instead of an arbitrary score.
+
+## Step 5: AI agent with tools
+
+Changed: `/api/agent`, agent loop/orchestrator and schemas, dashboard preparation UI and copy buttons, application persistence/types, offline TypeScript tests, and Step 5 SQL.
+
+Run Step 5 SQL, start FastAPI and Next.js, and click **Prepare my application**. The model chooses available tools; the server executes `analyze_job`, `get_cv`, `match_score`, `rewrite_bullets`, and `draft_email`, returns each output to the model, and accepts a final answer only after all tools finish. Tools cannot accept arbitrary user IDs or CV IDs. The loop has an eight-turn limit and tools become available only when prerequisites have completed.
+
+Test: expect a score, missing skills, exactly three bullets, a draft email, and copy buttons. Refresh to verify all results remain. Confirm the CV filename/timestamp, replace your CV, and re-run to regenerate. Review every fact and placeholder before copying; email is never sent. Try a different user's application ID: expect 404 before any paid AI call.
+
+`npm.cmd test` runs eight offline tests for complete tool loops, early final answers, foreign tool arguments, unsupported tools/order, invalid JSON/refusals, job validation, skill extraction, and score bounds. These tests do not verify live model quality or billing access.
