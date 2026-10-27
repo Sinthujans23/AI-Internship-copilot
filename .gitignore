@@ -6,3 +6,6 @@
 *.tsbuildinfo
 .npm-cache/
 next-env.d.ts
+**/.venv/
+**/__pycache__/
+*.pyc

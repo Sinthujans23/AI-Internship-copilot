@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { applicationStatuses, type ApplicationRow } from "@/lib/applications";
+import { ApplicationMatch } from "@/components/application-match";
 
 const fieldClass = "mt-1 w-full rounded border border-slate-300 bg-white p-2";
 
@@ -115,6 +116,7 @@ export function ApplicationTracker({ initialApplications, initialError }: {
             </div>
           </div>
           {application.job_text && <details className="mt-4"><summary className="cursor-pointer text-violet-700">View job post</summary><p className="mt-2 whitespace-pre-wrap break-words text-slate-600">{application.job_text}</p></details>}
+          <ApplicationMatch id={application.id} initial={application.match_result} />
         </li>)}</ul>}
     </section>
   </>;
