@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -40,7 +40,7 @@ export function AuthForm({ mode, errorCode }: { mode: "login" | "signup"; errorC
         setNeedsConfirmation(true);
         return;
       }
-      router.replace("/dashboard");
+      router.replace("/profile");
       router.refresh();
     } catch (error) {
       setError(error instanceof Error ? error.message : "Authentication failed. Try again.");

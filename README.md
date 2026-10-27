@@ -203,3 +203,11 @@ The current local configuration selects OpenRouter. Put `OPENROUTER_API_KEY` in 
 Run `npm.cmd run dev` and, in another terminal, `npm.cmd run dev:matching`. Test job JSON at `/jobs`, matching with a saved CV/job, then the dashboard agent and `/companies`. Requests require schema/tool-compatible endpoints and still validate returned JSON. No direct OpenAI fallback is made if OpenRouter fails. To select direct OpenAI instead, set `AI_PROVIDER=openai` in both environments and supply the existing OpenAI settings.
 
 On Vercel configure the same web variables; on Render configure the Python variables and shared matching key. See [OpenRouter structured outputs](https://openrouter.ai/docs/guides/features/structured-outputs) and [embeddings](https://openrouter.ai/docs/api/reference/embeddings).
+
+## CV-first onboarding and quality review
+
+The home page, successful login and email callback now open `/profile`. Upload a PDF to save it and automatically request a CV quality review. Existing CVs have an **Analyze CV** button. Five criteria (clarity, relevance, evidence, completeness, writing) are scored 0?2 each; the server calculates the total out of 10 and shows strengths and prioritized recommendations. This is a text-based AI estimate, not a job-match score, ATS certification or hiring prediction.
+
+Reviews are saved in the existing `cvs.analysis.cv_review` JSON field under owner RLS, so no new SQL is needed. Refresh reuses the saved review. Provider failures leave the CV saved with an actionable retry button. Uploading/replacing with an updated CV creates a fresh review; edited PDF copies can be reviewed from the profile. Review requires the configured AI provider key and credits.
+
+Test: log in and verify `/profile`; upload a text PDF; confirm the five sub-scores sum to the displayed /10 rating, strengths and recommendations appear; refresh and check persistence. With no AI credits, verify the CV still saves and the review shows a retry error. Check an older CV's Analyze button and use Applications navigation to reach the tracker.
