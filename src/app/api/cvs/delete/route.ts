@@ -1,3 +1,18 @@
 ﻿import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
-export async function POST(request:Request){try{const supabase=await createClient();const {data:{user}}=await supabase.auth.getUser();if(!user)return NextResponse.json({error:"Sign in required."},{status:401});const body=await request.json().catch(()=>({}));const id=body?.id;if(typeof id!=="string")return NextResponse.json({error:"Invalid CV id."},{status:400});const {data:cv,error:lookupError}=await supabase.from("cvs").select("file_path").eq("id",id).eq("user_id",user.id).single();if(lookupError||!cv)return NextResponse.json({error:"CV not found."},{status:404});const {error:storageError}=await supabase.storage.from("cvs").remove([cv.file_path]);if(storageError)return NextResponse.json({error:storageError.message},{status:500});const {error}=await supabase.from("cvs").delete().eq("id",id).eq("user_id",user.id);if(error)return NextResponse.json({error:error.message},{status:500});return NextResponse.json({ok:true})}catch(error){return NextResponse.json({error:error instanceof Error?error.message:"Delete failed."},{status:503})}}
+import { z } from "zod";
+import { requireUser, apiError, AppError } from "@/lib/api";
+
+export async function POST(request: Request) {
+  try {
+    const { supabase, user } = await requireUser();
+    const { id } = z.object({ id: z.string().uuid() }).parse(await request.json());
+    const { data: cv, error } = await supabase.from("cvs").select("file_path").eq("id", id).eq("user_id", user.id).maybeSingle();
+    if (error) throw error;
+    if (!cv) throw new AppError("CV not found.", 404);
+    const removed = await supabase.storage.from("cvs").remove([cv.file_path]);
+    if (removed.error) throw removed.error;
+    const deleted = await supabase.from("cvs").delete().eq("id", id).eq("user_id", user.id);
+    if (deleted.error) throw deleted.error;
+    return NextResponse.json({ ok: true });
+  } catch (error) { return apiError(error); }
+}

@@ -1,7 +1,58 @@
 ﻿import { NextResponse } from "next/server";
 import { z } from "zod";
-import { createClient } from "@/lib/supabase/server";
-import { analyzeCv } from "@/lib/agent/workflow";
-const cvAnalysisSchema=z.object({skills:z.array(z.string()),education:z.array(z.string()),projects:z.array(z.string()),experience:z.array(z.string()),qualifications:z.array(z.string())});
-export async function GET(){try{const supabase=await createClient();const {data:{user}}=await supabase.auth.getUser();if(!user)return NextResponse.json({error:"Sign in required."},{status:401});const {data,error}=await supabase.from("cvs").select("id,file_name,analysis,created_at").eq("user_id",user.id).order("created_at",{ascending:false});if(error)return NextResponse.json({error:error.message},{status:500});return NextResponse.json(data)}catch(error){const message=error instanceof Error?error.message:"CV service unavailable.";return NextResponse.json({error:message},{status:message.includes("not configured")?503:500})}}
-export async function POST(request:Request){let supabase:Awaited<ReturnType<typeof createClient>>|null=null;let path:string|undefined;try{const form=await request.formData();const file=form.get("file");if(!(file instanceof File))return NextResponse.json({error:"Choose a PDF file."},{status:400});if(file.type!=="application/pdf"||file.size<1||file.size>8*1024*1024)return NextResponse.json({error:"Choose a PDF file no larger than 8 MB."},{status:400});const buffer=Buffer.from(await file.arrayBuffer());if(buffer.subarray(0,5).toString()!=="%PDF-")return NextResponse.json({error:"This file does not look like a valid PDF."},{status:400});const pdf=await import("pdf-parse");const parsed=await pdf.default(buffer);const extractedText=parsed.text.trim();if(extractedText.length<60)return NextResponse.json({error:"No readable text found. Try a text-based PDF rather than a scanned image."},{status:400});supabase=await createClient();const {data:{user}}=await supabase.auth.getUser();if(!user)return NextResponse.json({error:"Sign in to upload a CV."},{status:401});const analysis=await analyzeCv(extractedText);const id=crypto.randomUUID();path=`${user.id}/${id}.pdf`;const {error:uploadError}=await supabase.storage.from("cvs").upload(path,buffer,{contentType:"application/pdf",upsert:false});if(uploadError)throw new Error(uploadError.message);const {data,error}=await supabase.from("cvs").insert({id,user_id:user.id,file_path:path,file_name:file.name.slice(0,255),extracted_text:extractedText,analysis}).select("id,file_name,analysis,created_at").single();if(error)throw new Error(error.message);return NextResponse.json(data,{status:201})}catch(error){if(path&&supabase)await supabase.storage.from("cvs").remove([path]);if(error instanceof z.ZodError)return NextResponse.json({error:error.issues[0]?.message||"Invalid CV analysis."},{status:502});const message=error instanceof Error?error.message:"Upload failed.";return NextResponse.json({error:message},{status:message.includes("not configured")?503:500})}}
+import { requireUser, apiError, AppError } from "@/lib/api";
+import { extractCvSkills } from "@/lib/cv-skills";
+
+export const runtime = "nodejs";
+export const maxDuration = 60;
+export async function GET() {
+  try {
+    const { supabase, user } = await requireUser();
+    const { data, error } = await supabase.from("cvs").select("*").eq("user_id", user.id).order("created_at", { ascending: false });
+    if (error) throw error;
+    return NextResponse.json(data, { headers: { "Cache-Control": "private, no-store" } });
+  } catch (error) { return apiError(error); }
+}
+export async function POST(request: Request) {
+  try {
+    const { supabase, user } = await requireUser();
+    const form = await request.formData();
+    const replacement = form.get("replace_id");
+    const replaceId = replacement ? z.string().uuid().parse(replacement) : null;
+    const old = replaceId ? await supabase.from("cvs").select("id,file_path").eq("id", replaceId).eq("user_id", user.id).maybeSingle() : null;
+    if (old?.error) throw old.error;
+    if (replaceId && !old?.data) throw new AppError("The CV to replace was not found.", 404);
+    const file = form.get("file");
+    if (!(file instanceof File) || file.type !== "application/pdf" || file.size === 0 || file.size > 4 * 1024 * 1024) throw new AppError("Choose a PDF file no larger than 4 MB.", 400);
+    const buffer = Buffer.from(await file.arrayBuffer());
+    if (buffer.subarray(0, 5).toString() !== "%PDF-") throw new AppError("This file is not a valid PDF.", 400);
+    let text: string;
+    try {
+      const pdf = (await import("pdf-parse")).default;
+      text = (await pdf(buffer)).text.trim();
+    } catch { throw new AppError("Could not read this PDF. Use an unlocked, text-based PDF.", 422); }
+    if (text.length < 40) throw new AppError("No readable CV text found. Scanned image PDFs need OCR first.", 422);
+    if (text.length > 50000) throw new AppError("CV text is too long. Upload a shorter CV (under 50,000 characters).", 400);
+    const skills = extractCvSkills(text);
+    const id = crypto.randomUUID();
+    const path = `${user.id}/${id}.pdf`;
+    const upload = await supabase.storage.from("cvs").upload(path, buffer, { contentType: "application/pdf" });
+    if (upload.error) throw upload.error;
+    const { data, error } = await supabase.from("cvs").insert({ id, user_id: user.id, file_path: path, file_name: file.name.slice(0, 255), extracted_text: text, skills, analysis: { skills, experience: [], projects: [], education: [], qualifications: [] } }).select("*").single();
+    if (error) {
+      await supabase.storage.from("cvs").remove([path]);
+      throw error;
+    }
+    // Keep the old CV until the new file and database row have both been saved.
+    let warning: string | undefined;
+    if (old?.data) {
+      const removed = await supabase.storage.from("cvs").remove([old.data.file_path]);
+      if (removed.error) warning = "New CV saved. The old CV could not be removed; delete it from the list.";
+      else {
+        const deleted = await supabase.from("cvs").delete().eq("id", old.data.id).eq("user_id", user.id);
+        if (deleted.error) warning = "New CV saved. The old database entry could not be removed; delete it from the list.";
+      }
+    }
+    return NextResponse.json({ cv: data, warning }, { status: 201 });
+  } catch (error) { return apiError(error); }
+}
