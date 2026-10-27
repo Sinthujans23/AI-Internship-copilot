@@ -10,5 +10,5 @@ export default async function JobsPage() {
   ]);
   const parsed = preferencesSchema.safeParse(saved.data?.preferences);
   const preferences = parsed.success ? parsed.data : defaultPreferences;
-  return <JobDiscovery hasCv={!!cv.data} initialWarning={cv.error ? "Could not load your CV. Refresh or check CV Profile." : saved.error ? "Saved preferences could not be loaded; enter your search filters below." : ""} initial={{ role: preferences.target_role.slice(0, 120), location: preferences.locations[0] || "", remote: preferences.work_mode === "Remote", internships: true }} />;
+  return <JobDiscovery hasCv={!!cv.data} initialWarning={cv.error ? "Could not load your CV. Refresh or check CV Profile." : saved.error ? "Saved preferences could not be loaded; using the default internship search." : !parsed.success ? "No saved career preferences yet. Using Software Engineering Intern across listed locations; save your preferences in Company shortlist to personalize this." : ""} initial={{ role: preferences.target_role.slice(0, 120), location: preferences.locations[0] || "", remote: preferences.work_mode === "Remote", internships: true }} />;
 }

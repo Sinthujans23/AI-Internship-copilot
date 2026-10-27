@@ -15,6 +15,6 @@ export async function publicJobs() {
   }));
   return {
     jobs: results.flatMap(result => result.status === "fulfilled" ? result.value : []),
-    warnings: results.flatMap((result, i) => result.status === "rejected" ? [`${sources[i].name} is unavailable. Other results and external search links are still available.`] : []),
+    warnings: results.flatMap((result, i) => result.status === "rejected" ? [`${sources[i].name} is unavailable. Any available results from the other source are shown.`] : []),
   };
 }
