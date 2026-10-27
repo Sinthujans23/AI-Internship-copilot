@@ -35,3 +35,15 @@ Run Step 5 SQL, start FastAPI and Next.js, and click **Prepare my application**.
 Test: expect a score, missing skills, exactly three bullets, a draft email, and copy buttons. Refresh to verify all results remain. Confirm the CV filename/timestamp, replace your CV, and re-run to regenerate. Review every fact and placeholder before copying; email is never sent. Try a different user's application ID: expect 404 before any paid AI call.
 
 `npm.cmd test` runs eight offline tests for complete tool loops, early final answers, foreign tool arguments, unsupported tools/order, invalid JSON/refusals, job validation, skill extraction, and score bounds. These tests do not verify live model quality or billing access.
+
+## Step 6: Polish + deploy
+
+Changed: score card/skill chips, application counters/search/status filters, responsive/global styles, profile page auth, confirmation resend, current-route redirects, modern PDF parser/worker setup, deployment/env/SQL scripts, Render config, README and deployment docs. The obsolete prototype analyzer/scorer has been removed.
+
+Run `npm.cmd run setup:env` to prepare ignored local env files; it generates a shared matching-service key without printing it and preserves nonempty values. Add the real OpenAI key to both env files. Run the entire `supabase/setup.sql` in SQL Editor for all new columns/policies. `npm.cmd run sql` regenerates it from supported migrations.
+
+Final offline tests also cover malformed configuration, cross-user application scoping before CV access, invalid provider output, invalid matching partitions, service outages, and a real generated PDF. The PDF regression exposed the obsolete parser's failure on a valid PDF; the modern PDFParse API with explicit worker setup passes it. Use Node 22.3+ (22.18 was tested).
+
+Follow `docs/DEPLOYMENT.md` for account provisioning, environment variables, Vercel/Render deployment, callback URLs, and production tests. These are manual account actions; no site has been published. Test mobile width, keyboard focus, disabled loading controls, score/skill cards, copy buttons, and failure messages. Confirm signup/email confirmation and all persisted flows using two real accounts before calling the app live-verified.
+
+Final result: build, lint (zero warnings), typecheck, 14 TypeScript tests, four Python tests, and production page/API/FastAPI smoke checks passed. See `docs/VALIDATION.md` for the precise evidence and remaining manual checks.

@@ -42,11 +42,12 @@ export async function prepareApplication(application: AppRow, cv: CvRow) {
       if (name === "match_score") { match = await matchCvToJob(cv, job); return match; }
       if (name === "rewrite_bullets") {
         const result = await structuredOutput(bulletsSchema, "tailored_bullets", "Rewrite exactly three CV bullets for this job using only CV facts. Never invent employers, credentials, skills, experience or metrics. If evidence is insufficient, include an explicit [add your actual ...] placeholder. Return three nonempty bullets.", { job, cv_text: cv.extracted_text, match });
-        if (result.bullets.length !== 3 || result.bullets.some(bullet => !bullet.trim())) throw new AppError("The AI did not return three usable bullets. Retry.", 502);
+        if (result.bullets.length !== 3 || result.bullets.some(bullet => !bullet.trim() || bullet.length > 600)) throw new AppError("The AI did not return three concise usable bullets. Retry.", 502);
         bullets = result.bullets; return result;
       }
       email = await structuredOutput(emailSchema, "application_email", "Draft a short professional application email, about 100-150 words, based only on these CV facts and job details. Use [Your Name] and [Hiring Manager] when unknown. Do not claim missing skills or fabricate qualifications. Do not send anything.", { job, cv_text: cv.extracted_text });
       if (!email.subject.trim() || !email.body.trim()) throw new AppError("The AI returned an empty email draft.", 502);
+      if (email.subject.length > 200 || email.body.trim().split(/\s+/).length > 220) throw new AppError("The AI email draft was too long. Please retry.", 502);
       return email;
     });
     // Persist real tool outputs, rather than any score invented in the final prose.

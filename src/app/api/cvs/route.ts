@@ -2,6 +2,7 @@
 import { z } from "zod";
 import { requireUser, apiError, AppError } from "@/lib/api";
 import { extractCvSkills } from "@/lib/cv-skills";
+import { parseCvPdf } from "@/lib/parse-cv";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -28,8 +29,7 @@ export async function POST(request: Request) {
     if (buffer.subarray(0, 5).toString() !== "%PDF-") throw new AppError("This file is not a valid PDF.", 400);
     let text: string;
     try {
-      const pdf = (await import("pdf-parse")).default;
-      text = (await pdf(buffer)).text.trim();
+      text = await parseCvPdf(new Uint8Array(buffer));
     } catch { throw new AppError("Could not read this PDF. Use an unlocked, text-based PDF.", 422); }
     if (text.length < 40) throw new AppError("No readable CV text found. Scanned image PDFs need OCR first.", 422);
     if (text.length > 50000) throw new AppError("CV text is too long. Upload a shorter CV (under 50,000 characters).", 400);

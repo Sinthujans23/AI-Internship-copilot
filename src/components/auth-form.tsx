@@ -13,6 +13,7 @@ export function AuthForm({ mode, errorCode }: { mode: "login" | "signup"; errorC
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [needsConfirmation, setNeedsConfirmation] = useState(errorCode === "confirmation");
   const signingUp = mode === "signup";
   const callbackError = errorCode === "configuration"
     ? supabaseSetupMessage
@@ -30,9 +31,13 @@ export function AuthForm({ mode, errorCode }: { mode: "login" | "signup"; errorC
         ? await supabase.auth.signUp({ email: email.trim(), password,
             options: { emailRedirectTo: `${window.location.origin}/api/auth/callback` } })
         : await supabase.auth.signInWithPassword({ email: email.trim(), password });
-      if (result.error) throw result.error;
+      if (result.error) {
+        if (result.error.code === "email_not_confirmed") setNeedsConfirmation(true);
+        throw result.error;
+      }
       if (!result.data.session) {
         setMessage("Check your email to confirm your account, then log in.");
+        setNeedsConfirmation(true);
         return;
       }
       router.replace("/dashboard");
@@ -42,6 +47,17 @@ export function AuthForm({ mode, errorCode }: { mode: "login" | "signup"; errorC
     } finally {
       setBusy(false);
     }
+  }
+
+  async function resendConfirmation() {
+    if (!email.trim()) { setError("Enter your signup email above first."); return; }
+    setBusy(true); setError(""); setMessage("");
+    try {
+      const { error } = await createClient().auth.resend({ type: "signup", email: email.trim(), options: { emailRedirectTo: `${window.location.origin}/api/auth/callback` } });
+      if (error) throw error;
+      setMessage("Confirmation requested. Check your inbox and spam folder; email rate limits may apply.");
+    } catch (error) { setError(error instanceof Error ? error.message : "Could not resend confirmation."); }
+    finally { setBusy(false); }
   }
 
   return (
@@ -62,6 +78,7 @@ export function AuthForm({ mode, errorCode }: { mode: "login" | "signup"; errorC
           {message && <p role="status" className="text-green-700">{message}</p>}
           <button disabled={busy} className="w-full rounded bg-violet-700 px-4 py-2 text-white disabled:opacity-50">{busy ? "Please wait…" : signingUp ? "Sign up" : "Log in"}</button>
         </form>
+        {needsConfirmation && <div className="mt-4 space-y-3 rounded bg-violet-50 p-3"><p className="text-sm">Open the newest confirmation email on this computer, in the browser used to sign up. Keep this local server running. Expired links need a new email.</p><button disabled={busy} type="button" onClick={() => void resendConfirmation()} className="rounded border border-violet-300 px-3 py-2 text-violet-800">Resend confirmation email</button></div>}
         <p className="mt-6">{signingUp ? "Already registered? " : "New here? "}<Link className="text-violet-700 underline" href={signingUp ? "/login" : "/signup"}>{signingUp ? "Log in" : "Sign up"}</Link></p>
       </div>
     </main>

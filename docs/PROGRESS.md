@@ -5,14 +5,14 @@ Complete steps in order. Each implementation gets build/lint checks and a Git co
 | Step | Name | Status |
 | --- | --- | --- |
 | 0 | Setup | Complete: development login page returned HTTP 200; build and lint passed (two existing warnings) |
-| 1 | Auth + application tracker | Local implementation build/lint passed (two existing warnings); nullable match_score added; Supabase configuration and live checks pending |
+| 1 | Auth + application tracker | Implemented; Supabase connectivity previously verified; real email confirmation and authenticated acceptance remain manual |
 | 2 | Job post to JSON | Implemented; live acceptance requires OpenAI key and Step 2 SQL |
 | 3 | CV upload + parse | Implemented; live upload/ownership checks require Step 3 SQL and a signed-in user |
 | 4 | Python matching service | Implemented; four Python tests passed; live embeddings require API key and service startup |
 | 5 | AI agent with tools | Implemented; eight offline TypeScript tests passed; live preparation requires OpenAI key, matching service, and Step 5 SQL |
-| 6 | Polish + deploy | Pending |
+| 6 | Polish + deploy | Build/lint/typecheck, 14 TS tests, four Python tests, and production route/service smoke checks passed; hosting/live acceptance remain manual |
 
-Earlier prototype AI/CV files are preserved in the initial repository snapshot. They do not establish completion of Steps 2–5. Later steps will follow the requested API contracts and use a separate FastAPI service.
+The initial Git snapshot preserves earlier prototype code. It has now been replaced by the supported structured job analyzer, profile, FastAPI service, and bounded tool-calling agent. Each step's implementation was checked and committed in order. Build/offline tests do not establish live account, provider, or hosting acceptance.
 
 ## Target folders
 

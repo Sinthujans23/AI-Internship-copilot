@@ -1,112 +1,188 @@
-﻿# AI Internship Copilot — Step 1
+﻿# AI Internship Copilot
 
-Email/password authentication and a private application tracker using Next.js App Router, TypeScript, Tailwind CSS, and Supabase. This step needs no AI API key. The dashboard adds, lists, changes status, and deletes applications.
+A full-stack student application workspace. Paste a job post, upload a CV, compare skill alignment, draft application materials, and track each application.
 
-## Build roadmap
+Implementation for Steps 0–6 is present. Build/lint and offline tests validate code paths; live signup, database/storage ownership, paid AI calls, and deployed acceptance still need your configured accounts. See [step verification](docs/STEPS.md), [progress](docs/PROGRESS.md), and [deployment instructions](docs/DEPLOYMENT.md).
 
-The full app will compare a student's CV with a job post, show a match score and missing skills, draft tailored bullets and an application email, and track applications. We are completing the steps in order; see [implementation progress](docs/PROGRESS.md) for status and planned folders. Steps 2–6, including FastAPI, tool calling, and deployment instructions, are pending.
+## Features
 
-This folder already contained an app. The Step 0 Git snapshot preserves that starting code, including earlier prototype files; it does not mean their later-step features have been verified.
+- Supabase email/password signup, confirmation resend, login, logout, and protected workspace.
+- Application add/list/status update/delete, search, filters, and real status counts.
+- `/jobs`: structured job analysis into `{ role, company, skills_required, good_to_have, responsibilities }`, with server validation and save-to-tracker.
+- `/profile`: private PDF upload, text extraction, explicit skill extraction, replacement, deletion, and saved text display.
+- Separate Python FastAPI embedding matching service with cosine similarity, a 0–100 score, matched skills, and missing skills.
+- A real bounded LLM tool-calling loop for `analyze_job`, `get_cv`, `match_score`, `rewrite_bullets`, and `draft_email`.
+- **Prepare my application** produces three tailored bullets and a short professional email. Copy buttons, CV/timestamp snapshots, persisted results, score cards, skill chips, loading/error states, and responsive layouts.
+- RLS and private storage policies enforce ownership; server endpoints also verify the user and scope all IDs.
 
-## 1. Install and configure
+## Tech stack
 
-Use Node.js 22 or newer. In PowerShell, use `npm.cmd` if `npm` is blocked by the script execution policy.
+| Layer | Technology |
+| --- | --- |
+| Web frontend/backend | Next.js 15 App Router, React, TypeScript |
+| Styling | Tailwind CSS 4 |
+| Auth/database/storage | Supabase Auth, Postgres, private Storage |
+| AI | OpenAI SDK, strict JSON Schema outputs, Zod validation, function calling |
+| Matching | Python 3.13, FastAPI, OpenAI embeddings, cosine similarity |
+| Testing | Node test runner with tsx, Python unittest/FastAPI TestClient |
+| Hosting | Vercel for Next.js, Render for FastAPI |
+
+## Architecture
+
+```mermaid
+flowchart LR
+    Student[Student browser] --> Web[Next.js pages]
+    Web --> Auth[Supabase Auth and session cookies]
+    Web --> API[Authenticated Next.js API routes]
+    API --> DB[(Postgres with RLS)]
+    API --> Files[Private CV storage]
+    API --> PDF[PDF text and skill extraction]
+    API --> LLM[Structured LLM output]
+    API --> Agent[Bounded tool-calling loop]
+    Agent --> LLM
+    Agent --> Tools[Server-bound job and CV tools]
+    Tools --> DB
+    Tools --> Match[FastAPI matching service]
+    API --> Match
+    Match --> Embed[OpenAI embeddings and cosine scoring]
+```
+
+The browser never receives OpenAI or matching-service secrets. Tools receive no arbitrary user IDs: the server binds them to the authenticated user, requested application, and newest CV before any AI call. Job/CV content is untrusted data, not executable instructions. Drafts are shown for review; nothing sends an application email.
+
+## 1. Local setup
+
+Requirements: Node.js 22+, Python 3.11+ (tested with 3.13.1), a Supabase project, and an OpenAI API key with billing/model access.
 
 ```powershell
 npm.cmd install
+npm.cmd run setup:env
 ```
 
-A blank `.env.local` has been created. Fill in your Supabase project values:
+The setup script preserves existing nonempty values, prepares `.env.local` and `matching-service/.env`, and generates a random matching-service key when none exists. It never prints keys. Add your actual Supabase URL/public key and `OPENAI_API_KEY` to `.env.local`. Also put `OPENAI_API_KEY` in `matching-service/.env`; rerunning setup fills a blank service key from the root config but does not overwrite existing values. The shared matching-service keys must be identical.
 
-```dotenv
-NEXT_PUBLIC_SUPABASE_URL=your-project-url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-public-anon-key
+Use `npm.cmd` in PowerShell when `npm.ps1` is blocked. In other shells, ordinary `npm` works. Restart the dev server after editing env values. Never commit either env file or put a login email/password in place of the project URL/API key.
+
+## 2. Supabase SQL and Auth
+
+In your Supabase project's SQL Editor, paste and run the entire [supabase/setup.sql](supabase/setup.sql). It creates/upgrades the supported schema without deleting application or CV rows. It includes:
+
+- `applications`: identity/ownership, company, role, status, job text, score, structured job data, match data, agent results, and creation time.
+- `cvs`: identity/ownership, private file path/name, extracted text, extracted skills, analysis JSON, and creation time.
+- User indexes, authenticated-only RLS, and a private `cvs` PDF bucket limited to 4 MB.
+
+The file can be rerun. It is generated with `npm.cmd run sql` from the supported Step 1–5 migrations. The older `20261020000000_initial_schema.sql` is retained as history; do not run it after setup. Each step's migration can instead be run in order; see `docs/STEPS.md`.
+
+Enable email/password authentication. Set Site URL to `http://localhost:3000` and allow the redirect `http://localhost:3000/api/auth/callback`. Keep email confirmation enabled if you want verified signups. Confirm in the same browser/computer as signup while the local server is running. If the email link opened on a phone, its localhost points to the phone, not your laptop. Use **Resend confirmation email** in the app for an expired link, subject to provider email limits.
+
+## 3. Start both servers
+
+Terminal 1:
+
+```powershell
+cd matching-service
+python -m venv .venv
+.venv\Scripts\python.exe -m pip install -r requirements.txt
+.venv\Scripts\python.exe -m uvicorn main:app --host 127.0.0.1 --port 8000 --reload
 ```
 
-Get these from your Supabase project's Connect dialog / API settings. Use the public anon key, never a service role or secret key. `.gitignore` ignores `.env.local`; `.env.example` is the shareable blank template. Next.js reads `.env.local` automatically. Restart the dev server after changing it.
-
-## 2. Create the applications table
-
-Open Supabase **SQL Editor**, create a query, paste the entire contents of `supabase/migrations/20261026000000_step1_applications.sql`, and run it.
-
-For Step 1, run only this SQL file. It works on a fresh project and also upgrades the earlier prototype applications table without deleting its rows. It creates the requested `id`, `user_id`, `company`, `role`, `status`, `job_text`, `match_score`, and `created_at` columns, plus an ownership index and Row Level Security. `job_text` is optional in the form and stored as an empty string if omitted. `match_score` is nullable until Step 4 calculates it; scores must be integers from 0 to 100. If you ran the earlier Step 1 SQL, run this updated file again to add `match_score` safely.
-
-RLS permits authenticated users to select, insert, update, and delete only their own rows. Updates cannot transfer a row to another user. API routes also check the user, set `user_id` on the server, and filter by ownership.
-
-## 3. Configure Supabase Auth
-
-Enable the Email provider with password login in Supabase Authentication. Keep email confirmation enabled if you want verified signups.
-
-Under Authentication → URL Configuration, set:
-
-- Site URL: `http://localhost:3000`
-- Redirect URL: `http://localhost:3000/api/auth/callback`
-
-The signup page redirects confirmation links to the callback route, which exchanges the code for a session. Open the email link in the same browser used to sign up, because the confirmation flow uses that browser's verifier cookie. If confirmation is disabled, signup logs in immediately. Otherwise, check your inbox (and spam) and confirm before logging in. Provider email limits may apply during repeated signup testing.
-
-## 4. Run
-
-If an error points to `createServerClient` in middleware, check that `NEXT_PUBLIC_SUPABASE_URL` is the actual full Project URL beginning with `https://`, copied from Supabase. A project name or placeholder such as `your-project-url` is not a URL. The app now checks the URL before creating its clients and redirects to a setup message for missing or malformed configuration. Restart the server after correcting `.env.local`. A correctly formatted URL and nonempty key still need to belong to a real Supabase project.
+Terminal 2, from the repository root:
 
 ```powershell
 npm.cmd run dev
 ```
 
-Open `http://localhost:3000/signup`. Routes:
+Open `http://localhost:3000/signup`. After confirmation/login, upload a CV at `/profile`, analyze a job at `/jobs`, save it, and prepare it at `/dashboard`. `/applications`, `/cvs`, and `/analyze` redirect to the current pages. `/api/analyze` aliases the new `{ job_text }` contract.
 
-Development uses `.next-dev` and production builds use `.next`, so running a build cannot overwrite an active development server's generated files. After pulling this configuration change, restart `npm.cmd run dev` if your terminal does not restart automatically.
+The development server uses `.next-dev`; production builds use `.next`, so building does not corrupt a running dev server. If a port is busy, stop the duplicate server or update the Supabase redirect URLs to match the port actually used. Production preview: `npm.cmd run build`, then `npm.cmd start`.
 
-- `/signup`: email/password registration
-- `/login`: email/password login
-- `/logout`: logout form; the dashboard also has a Log out button
-- `/dashboard`: protected application tracker
-- `/applications`: redirects old bookmarks to `/dashboard`
+## Environment variables
 
-Session cookies are refreshed in Next.js 15 middleware. Both the dashboard page and its layout verify the current user with Supabase. Without configured keys, a setup message is displayed and no application data is loaded.
+| Variable | Where | Purpose |
+| --- | --- | --- |
+| `NEXT_PUBLIC_SUPABASE_URL` | Next.js | Full project API URL copied from Supabase Connect |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Next.js | Public anon/publishable key, never a service-role/secret key |
+| `OPENAI_API_KEY` | Next.js and FastAPI | Private key for LLM output and embeddings |
+| `OPENAI_MODEL` | Next.js | Defaults to `gpt-4o-mini`; must support strict output and tools |
+| `MATCHING_SERVICE_URL` | Next.js | `http://127.0.0.1:8000` locally; Render HTTPS origin in production |
+| `MATCHING_SERVICE_API_KEY` | Both servers | Same random private service key; sent in `X-API-Key` |
+| `EMBEDDING_MODEL` | FastAPI | Defaults to `text-embedding-3-small` |
+| `MATCH_THRESHOLD` | FastAPI | Similarity threshold, default `0.65` |
 
-## 5. Test the acceptance criteria
+Root `.env.example` and `matching-service/.env.example` contain names/defaults only. No service-role key is required. A malformed project URL is detected before SDK initialization and displays a setup message instead of crashing middleware.
 
-1. Visit `/dashboard` while logged out; expect a redirect to `/login` once Supabase is configured.
-2. Sign up using a real email and a password of at least 8 characters. Confirm your email if enabled. Log in.
-3. Add company `Example Ltd`, role `Software Intern`, status `Applied`, and an optional job post. Expect the saved row in the list.
-4. Change status to `Interview`. Expect “Status saved.” Refresh the browser; the row must still show `Interview`.
-5. Log out and log back in. The application should still be there.
-6. In a private browser window, register a second user. Its dashboard must be empty. Add a separate application; the first user's list must not change.
-7. To verify API ownership, while logged in as the second user, send PATCH/DELETE requests to `/api/applications` using the first user's application ID. Both should return 404 and leave that row unchanged. An invalid status returns 400.
-8. Delete an application, accept the confirmation, and refresh; it must remain deleted.
-9. Log out and visit `/dashboard` again; expect `/login`. Calling `/api/applications` while logged out returns 401 when configured.
+## API routes
 
-Validation commands:
+| Route | Method | Input / purpose |
+| --- | --- | --- |
+| `/api/applications` | GET / POST / PATCH / DELETE | List/create, `{id,status}` update, `?id=` delete |
+| `/api/analyze-job` | POST | `{job_text}` → validated job JSON |
+| `/api/cvs` | GET / POST | List owned CVs; multipart `file`, optional `replace_id` |
+| `/api/cvs/delete` | POST | `{id}` → remove owned row/file |
+| `/api/match` | POST | `{application_id}` → match using newest owned CV; persist score/result |
+| `/api/agent` | POST | `{application_id}` → tool loop; persist preparation |
+| `/api/auth/callback` | GET | Exchange email confirmation code for session cookies |
+| FastAPI `/match` | POST | `{cv_text,cv_skills,job_skills}` + private service key |
+| FastAPI `/health` | GET | Service readiness |
+
+All private Next.js endpoints authenticate before validating/processing user files or making paid calls. Results are saved only after successful provider output validation. A failed agent run keeps any earlier preparation intact.
+
+## Matching and agent behavior
+
+The service embeds job skills plus CV skills and overlapping 600-character text chunks. Each job skill uses its highest CV cosine similarity; exact skill names count as 1. The score is the rounded mean similarity × 100, and skills below `MATCH_THRESHOLD` are missing. Required skills are used when present, otherwise good-to-have skills. No skill requirements yields an error rather than a fabricated score.
+
+This is an explainable heuristic, not a calibrated hiring probability. The initial skill extractor uses a small explicit vocabulary; full CV text is still embedded. The hosted embedding design keeps FastAPI lightweight and avoids downloading a large local ML runtime.
+
+The agent exposes only prerequisite-ready tools, executes their calls, appends each result using its `tool_call_id`, and requests the next model turn. It requires all five tools before accepting a final answer and stops after eight turns. Saved scores/bullets/emails come from validated tool outputs, not invented final prose. Drafts must be checked for accuracy; bracketed placeholders may appear when the CV has insufficient evidence for three distinct bullets.
+
+## How to test each step
+
+| Step | Acceptance test |
+| --- | --- |
+| 0 | Run dev; `/login` and `/signup` render. Build/lint succeed. |
+| 1 | Signup/confirm/login; add application; change status; refresh; log out/in; delete. Second account sees only its rows. |
+| 2 | Paste a job at `/jobs`; inspect clean JSON fields; save and refresh dashboard. Short input and provider errors show readable messages. |
+| 3 | Upload a text-based PDF at `/profile`; inspect text/skills; refresh; replace and delete. Another account cannot access it. |
+| 4 | Start FastAPI; run Check CV match; inspect score/missing skills; refresh. Missing service key fails safely. |
+| 5 | Prepare my application; inspect score, exactly three bullets, email, copy controls, and persisted results. Foreign application IDs return 404 before AI calls. |
+| 6 | Test a narrow mobile viewport, keyboard focus, search/filter, loading/errors, and deployed callbacks/ownership using the deployment checklist. |
 
 ```powershell
+npm.cmd test
 npm.cmd run lint
 npm.cmd run typecheck
 npm.cmd run build
+cd matching-service
+python -m unittest -v
 ```
 
-Real signup, persistence, and RLS checks require your configured Supabase project and the SQL above. The repository contains earlier prototype CV/AI files; they are not part of this step and are not linked from the Step 1 UI.
+TypeScript tests use fake tool/provider responses; FastAPI tests mock embeddings. They test validation, tool execution order and limits, data isolation, error handling, and scoring without paid calls. They do not prove email delivery, real RLS enforcement, model quality, or deployed persistence. Perform the two-account live tests above.
 
-**Current pause:** both Supabase environment values are blank. Create or choose a Supabase project, fill in `.env.local`, run the updated Step 1 SQL, and configure the callback above. Then run acceptance checks 1–9. Tell me when these are done (or share the error text) so we can finish Step 1 validation before implementing Step 2. Do not paste secret keys into chat.
+## Deployment
 
-## Files for Step 1
+Follow [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for exact Supabase, Vercel, and Render settings. `render.yaml` is included for the Python service. No account provisioning, Git push, or hosting deployment has been performed automatically. Redeploy Vercel when public env values change. The agent requests a 300-second Node function duration; check that this is enabled on your hosting account.
 
-- `src/lib/supabase/client.ts`, `server.ts`: cookie-based browser/server clients
-- `src/middleware.ts`: session refresh
-- `src/components/auth-form.tsx`: signup/login form
-- `src/app/login/page.tsx`, `signup/page.tsx`: existing auth page entry points
-- `src/app/api/auth/callback/route.ts`: existing email confirmation callback
-- `src/app/logout/actions.ts`, `page.tsx`: logout
-- `src/app/(workspace)/layout.tsx`: protected workspace
-- `src/app/(workspace)/dashboard/page.tsx`: authenticated database read
-- `src/app/(workspace)/applications/page.tsx`: redirect to dashboard
-- `src/components/app-shell.tsx`: simple header and logout button
-- `src/components/application-tracker.tsx`: add/list/status/delete UI
-- `src/app/api/applications/route.ts`: authenticated database writes and listing
-- `src/lib/applications.ts`, `src/types/database.ts`: validation and database types
-- `supabase/migrations/20261026000000_step1_applications.sql`: table and RLS SQL
-- `package.json`, `package-lock.json`, `postcss.config.mjs`: dependencies and Tailwind setup
-- `eslint.config.mjs`: compatible ESLint configuration for Next.js 15
-- `src/app/(workspace)/analyze/page.tsx`: corrected an existing state-setter type so the project compiles; no AI features added
-- `.env.local`, `.env.example`, `.gitignore`: local configuration and secret exclusions
+## What I learned
 
-Implementation follows the [Supabase SSR guide](https://supabase.com/docs/guides/auth/server-side/creating-a-client) and [Tailwind Next.js guide](https://tailwindcss.com/docs/installation/framework-guides/nextjs).
+This project provides practice with:
+
+- App Router server/client boundaries and cookie-based authentication.
+- RLS as database-level ownership enforcement, alongside server-side ID checks.
+- Coordinating file storage and database writes during upload/replacement.
+- Treating LLM output as untrusted input: strict JSON Schema plus runtime validation.
+- The full tool-calling cycle rather than a single prompted response.
+- Embeddings, cosine similarity, and the limits of heuristic scores.
+- Testing failure modes with fake providers and deploying two services with shared configuration.
+
+## Known limitations
+
+- Live AI requires a valid API key, model access, billing/quota, and outbound network access; embeddings also incur provider usage. Hosting/email plan limits and cold starts can delay or reject requests.
+- PDFs are limited to 4 MB and 50,000 extracted characters. Scanned/image-only or encrypted PDFs need OCR/unlocking outside this app.
+- The newest CV is used; no CV selector or automatic regeneration after replacement. Saved drafts identify their CV and creation time; re-run preparation after changes. Historical CV content may remain in saved application drafts until you delete those applications.
+- Database and Storage are separate operations. Failed replacement cleanup keeps the new CV and warns about the old entry; a failed compensating cleanup can require manual removal of an orphaned file.
+- Model instructions reduce hallucinations but cannot guarantee factual output or prevent every prompt-injection effect on draft wording. Review all claims, names, metrics, and placeholders before use.
+- A single synchronous agent request can time out. There is no durable background queue, resumable preparation, per-user paid-call quota, or distributed concurrency lock. Before a public launch, add persistent rate limits and spending controls appropriate to your audience.
+- No automatic applications or outgoing application email. No guarantee of interviews, offers, or ATS results.
+
+## References
+
+Implementation uses the official [Supabase SSR guide](https://supabase.com/docs/guides/auth/server-side/creating-a-client), [RLS documentation](https://supabase.com/docs/guides/database/postgres/row-level-security), [OpenAI structured outputs](https://developers.openai.com/api/docs/guides/structured-outputs), [function calling](https://developers.openai.com/api/docs/guides/function-calling), and [embeddings guide](https://developers.openai.com/api/docs/guides/embeddings). Deployment sources are linked in the deployment guide.

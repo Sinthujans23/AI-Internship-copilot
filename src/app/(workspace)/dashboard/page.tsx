@@ -14,5 +14,5 @@ export default async function Dashboard() {
   const { data, error } = await supabase.from("applications")
     .select("id,user_id,company,role,status,job_text,job_analysis,match_score,match_result,agent_result,created_at")
     .eq("user_id", user.id).order("created_at", { ascending: false });
-  return <ApplicationTracker initialApplications={data || []} initialError={error ? `Could not load applications: ${error.message}. Check that you ran the Step 1 SQL.` : ""} />;
+  return <ApplicationTracker initialApplications={data || []} initialError={error ? "Could not load applications. Run the entire supabase/setup.sql in Supabase SQL Editor to apply the latest schema." : ""} />;
 }

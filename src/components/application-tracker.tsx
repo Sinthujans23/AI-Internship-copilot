@@ -16,6 +16,11 @@ export function ApplicationTracker({ initialApplications, initialError }: {
   const [error, setError] = useState(initialError);
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const visible = applications.filter(application =>
+    `${application.company} ${application.role}`.toLowerCase().includes(search.toLowerCase()) &&
+    (!statusFilter || application.status === statusFilter));
 
   // All writes go through authenticated API routes and database RLS.
   async function request(path: string, method: string, body?: unknown) {
@@ -90,6 +95,7 @@ export function ApplicationTracker({ initialApplications, initialError }: {
   return <>
     <h1 className="mb-2 text-3xl font-bold">Your applications</h1>
     <p className="mb-6 text-slate-600">Add a job application and keep its status up to date.</p>
+    <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-5">{["Total", ...applicationStatuses].map(status => <div key={status} className="rounded-xl border border-slate-200 bg-white p-4"><p className="text-sm text-slate-500">{status}</p><p className="mt-1 text-2xl font-bold">{status === "Total" ? applications.length : applications.filter(application => application.status === status).length}</p></div>)}</div>
     {error && <p role="alert" className="mb-4 rounded border border-red-200 bg-red-50 p-3 text-red-800">{error}</p>}
     {message && <p role="status" className="mb-4 rounded bg-green-50 p-3 text-green-800">{message}</p>}
     <section className="mb-8 rounded-xl border border-slate-200 bg-white p-5" aria-labelledby="add-heading">
@@ -106,8 +112,9 @@ export function ApplicationTracker({ initialApplications, initialError }: {
     </section>
     <section aria-labelledby="list-heading">
       <h2 id="list-heading" className="mb-4 text-xl font-semibold">All applications ({applications.length})</h2>
-      {applications.length === 0 ? <p className="rounded border border-slate-200 bg-white p-6 text-slate-600">No applications yet. Add your first one above.</p> :
-        <ul className="space-y-4">{applications.map(application => <li key={application.id} className="rounded-xl border border-slate-200 bg-white p-5">
+      <div className="mb-4 flex flex-wrap gap-3"><label className="min-w-0 flex-1 text-sm">Search<input type="search" value={search} onChange={event => setSearch(event.target.value)} placeholder="Company or role" className={fieldClass} /></label><label className="text-sm">Status<select value={statusFilter} onChange={event => setStatusFilter(event.target.value)} className={fieldClass}><option value="">All statuses</option>{applicationStatuses.map(status => <option key={status}>{status}</option>)}</select></label></div>
+      {visible.length === 0 ? <p className="rounded border border-slate-200 bg-white p-6 text-slate-600">{applications.length ? "No applications match this search." : "No applications yet. Add your first one above."}</p> :
+        <ul className="space-y-4">{visible.map(application => <li key={application.id} className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="min-w-0 break-words"><h3 className="text-lg font-semibold">{application.role}</h3><p>{application.company}</p><p className="mt-1 text-sm text-slate-600">Added {new Date(application.created_at).toLocaleDateString("en-GB", { timeZone: "Asia/Colombo" })}</p></div>
             <div className="flex flex-wrap items-end gap-3">
@@ -116,7 +123,7 @@ export function ApplicationTracker({ initialApplications, initialError }: {
             </div>
           </div>
           {application.job_text && <details className="mt-4"><summary className="cursor-pointer text-violet-700">View job post</summary><p className="mt-2 whitespace-pre-wrap break-words text-slate-600">{application.job_text}</p></details>}
-          <ApplicationMatch id={application.id} initial={application.match_result} initialPreparation={application.agent_result} />
+          <ApplicationMatch id={application.id} initial={application.match_result} initialPreparation={application.agent_result} hasJob={!!application.job_analysis || application.job_text.trim().length >= 40} />
         </li>)}</ul>}
     </section>
   </>;

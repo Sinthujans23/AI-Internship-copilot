@@ -2,6 +2,7 @@
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import type { JobDetails } from "@/lib/job-schema";
+import { SkillChips } from "@/components/skill-chips";
 
 export function JobAnalyzer() {
   const [text, setText] = useState("");
@@ -39,7 +40,9 @@ export function JobAnalyzer() {
     {error && <p role="alert" className="rounded bg-red-50 p-3 text-red-800">{error}</p>}
     {result && <section className="space-y-5 rounded-xl border bg-white p-5">
       <div><h2 className="text-xl font-bold">{result.role}</h2><p>{result.company || "Company not specified"}</p></div>
-      {([["Required skills", result.skills_required], ["Good to have", result.good_to_have], ["Responsibilities", result.responsibilities]] as const).map(([title, values]) => <div key={title}><h3 className="mb-2 font-semibold">{title}</h3>{values.length ? <ul className="list-disc space-y-1 pl-5">{values.map((value, index) => <li key={index}>{value}</li>)}</ul> : <p>Not specified.</p>}</div>)}
+      <div><h3 className="mb-2 font-semibold">Required skills</h3><SkillChips skills={result.skills_required} /></div>
+      <div><h3 className="mb-2 font-semibold">Good to have</h3><SkillChips skills={result.good_to_have} /></div>
+      <div><h3 className="mb-2 font-semibold">Responsibilities</h3><ul className="list-disc space-y-1 pl-5">{result.responsibilities.map((value, index) => <li key={index}>{value}</li>)}</ul></div>
       <button onClick={() => void save()} disabled={busy || saved} className="rounded bg-violet-700 px-4 py-2 text-white">{saved ? "Saved" : busy ? "Saving..." : "Save as application"}</button>
       {saved && <p role="status">Saved. <Link href="/dashboard" className="text-violet-700 underline">Open dashboard</Link></p>}
     </section>}
