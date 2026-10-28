@@ -1,4 +1,4 @@
-﻿import { FlatCompat } from "@eslint/eslintrc";
+import { FlatCompat } from "@eslint/eslintrc";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 
@@ -6,6 +6,6 @@ import path from "node:path";
 const compat = new FlatCompat({ baseDirectory: path.dirname(fileURLToPath(import.meta.url)) });
 const config = [
   ...compat.extends("next/core-web-vitals", "next/typescript"),
-  { ignores: [".next/**", ".next-dev/**", "node_modules/**", ".npm-cache/**", "next-env.d.ts"] },
+  { ignores: ["**/.venv/**", "**/__pycache__/**", ".next/**", ".next-dev/**", "node_modules/**", ".npm-cache/**", "next-env.d.ts"] },
 ];
 export default config;

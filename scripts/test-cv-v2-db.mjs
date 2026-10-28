@@ -1,0 +1,28 @@
+import { spawnSync } from "node:child_process";
+import { readFileSync } from "node:fs";
+
+// Isolated PostgreSQL only: no published ports, secrets or hosted Supabase access.
+const name = `internship-cv-v2-test-${Date.now()}`;
+function docker(args, input) {
+  const result = spawnSync("docker", args, { input, encoding: "utf8", windowsHide: true });
+  if (result.status !== 0) throw new Error(result.stderr || "Docker command failed. Start Docker Desktop first.");
+  return result.stdout;
+}
+let started = false;
+try {
+  docker(["run", "--rm", "-d", "--network", "none", "--name", name, "-e", "POSTGRES_HOST_AUTH_METHOD=trust", "postgres:17-alpine"]);
+  started = true;
+  let ready = false;
+  for (let i = 0; i < 30; i++) {
+    const probe = spawnSync("docker", ["exec", name, "pg_isready", "-U", "postgres"], { windowsHide: true });
+    if (probe.status === 0) { ready = true; break; }
+    await new Promise(resolve => setTimeout(resolve, 1000));
+  }
+  if (!ready) throw new Error("Temporary PostgreSQL did not become ready.");
+  for (const file of ["tests/sql/cv-v2-fixture.sql", "supabase/migrations/20261028000000_cv_analyzer_v2.sql", "tests/sql/cv-v2-assertions.sql", "supabase/migrations/20261028000000_cv_analyzer_v2.sql"]) {
+    docker(["exec", "-i", name, "psql", "-U", "postgres", "-v", "ON_ERROR_STOP=1"], readFileSync(file, "utf8"));
+    console.log(`PASS ${file}`);
+  }
+} finally {
+  if (started) docker(["stop", name]);
+}

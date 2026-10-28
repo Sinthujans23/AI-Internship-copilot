@@ -1,6 +1,10 @@
-﻿export type Database = {
+export type Database = {
   public: {
     Tables: {
+      cv_analysis_history: {
+        Row: { id: string; user_id: string; cv_id: string; version: number; input_hash: string; status: string; result: unknown; created_at: string; finished_at: string | null };
+        Insert: never; Update: never; Relationships: [];
+      };
       career_preferences: {
         Row: { user_id: string; preferences: import("@/lib/company/schema").CareerPreferences; updated_at: string };
         Insert: { user_id: string; preferences: import("@/lib/company/schema").CareerPreferences; updated_at?: string };
@@ -20,7 +24,10 @@
       };
     };
     Views: Record<never, never>;
-    Functions: Record<never, never>;
+    Functions: {
+      reserve_cv_analysis: { Args: { p_cv_id: string; p_hash: string; p_force: boolean }; Returns: unknown };
+      finish_cv_analysis: { Args: { p_id: string; p_result: unknown }; Returns: unknown };
+    };
     Enums: Record<never, never>;
     CompositeTypes: Record<never, never>;
   };

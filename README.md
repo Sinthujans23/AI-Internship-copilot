@@ -249,3 +249,11 @@ Run `npm.cmd run dev`, open `/companies`, and verify only the company links form
 The complete **Your requirements** form is on `/jobs`, including role, locations, work mode, currency, salary range/period and notes. Saving validates and persists the existing owner-scoped career preferences, then automatically reloads job recommendations without a separate Search button. Refresh reloads saved values; company research continues using those same preferences. The form remains absent from Company Shortlist. Job feeds currently filter role, first location and Remote only; salary/Hybrid/On-site and additional locations are not verified by this search. The form explains these limits.
 
 Test with `npm.cmd run dev`: open Find Jobs, edit requirements, Save, confirm automatic refresh and persistence after browser refresh. A failed save must show an error without applying draft preferences. No new SQL or API keys are needed.
+
+## Advanced Explainable AI CV Analyzer v2
+
+CV Profile now supports heading-aware section detection, an explainable /10 score, deterministic checks plus evidence-validated AI feedback, prioritized recommendations and conservative before/after edits. Scores are coaching estimates, not ATS certification or hiring probability. The dashboard shows limitations and falls back to clearly labelled deterministic feedback if the provider fails.
+
+**Before using v2:** run `supabase/migrations/20261028000000_cv_analyzer_v2.sql` in your Supabase SQL Editor (or rerun `supabase/setup.sql`), then restart Next.js. No new keys are required. Existing v1 reviews are archived; new reviews use `cv_analysis_history` with owner RLS and a persistent five-analyses/hour limit. Updated CV uploads now preserve older versions and history until explicitly deleted. Content hashes detect stale reviews. Existing PDF editing and company/job matching continue to use the latest CV.
+
+See [CV Analyzer v2 setup, rubric, security, limitations and test checklist](docs/CV_ANALYZER_V2.md). Run unit/regression checks with `npm.cmd test`; isolated PostgreSQL migration/RLS tests with `node scripts/test-cv-v2-db.mjs` (Docker required).

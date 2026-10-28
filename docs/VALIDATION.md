@@ -40,3 +40,11 @@ Offline tests and anonymous route checks do not establish live provider access, 
 A read-only OpenAI model-access request returned HTTP 401 with `invalid_api_key`. No generation request was made and no key value/provider message was printed. Replacing the key requires the user's OpenAI account; model generation access and billing have not been verified.
 
 The app now distinguishes invalid API keys, model access, quota exhaustion, rate limits, and connection failures using fixed public messages. Build/lint passed and the expanded TypeScript suite passed all 17 tests, including three provider-error classification/redaction regressions.
+
+## CV Analyzer v2 ? 2026-10-28
+
+- 50 TypeScript tests and 12 Python tests passed, including new v2 section/scoring/feedback/ownership/save-failure tests and existing real PDF extraction/editing regressions.
+- Build and lint passed. Production review/history endpoints returned 401 to anonymous GET and POST requests.
+- An isolated PostgreSQL 17 container ran the real migration with synthetic auth roles/users. Assertions passed for history save/retrieve, v1 preservation, RLS isolation, anonymous denial, immutable completed snapshots, cache, duplicate prevention, five-per-hour limits and outdated-result handling. Rerunning the migration inserted no duplicate legacy row and preserved all completed/failed/outdated snapshots.
+- Additional rewrite checks preserve qualifiers and disallow changing testing into development claims; focused v2 tests were rerun.
+- Hosted Supabase migration, live AI generation, signed-in Storage/browser acceptance and deployment remain manual. No private CVs were sent to an AI provider during automated verification.
