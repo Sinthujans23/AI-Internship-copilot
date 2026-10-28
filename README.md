@@ -8,6 +8,8 @@ Current Find Jobs behavior and setup: [Hybrid semantic matching guide](docs/HYBR
 
 ## Features
 
+- `/github`: public GitHub project evidence, AI-assisted documentation review, CV comparison and student-approved skill drafts. See [GitHub Intelligence setup and tests](docs/GITHUB_INTELLIGENCE.md); run its new SQL migration before use.
+
 - `/companies`: private career preferences and company-link shortlisting, source-backed stack/role/pay/work-mode evidence, CV similarity as a percentage and `/10`, grounded CV edits, email draft, learning tasks, project interview practice, and clearly unverified similar-company research leads. See [company research guide](docs/COMPANY_RESEARCH.md).
 - Original-layout PDF region editor: select text blocks, queue company-tailored changes, preview fit/layout, download or save a new current CV while retaining the original. See [PDF editor setup and limitations](docs/PDF_EDITOR.md).
 

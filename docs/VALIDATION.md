@@ -58,3 +58,11 @@ The app now distinguishes invalid API keys, model access, quota exhaustion, rate
 - Live public adapter checks returned two IFS Sri Lanka internships with official application links, zero current IFS India internships, and 100 Jobicy keyword-feed records before internship title filtering. Counts are time-dependent.
 - Offline and actual OpenRouter openai/text-embedding-3-small runs both returned mean Recall@3 and NDCG@3 of 1.000 on three synthetic CVs/eight labelled fictional jobs. This is a small regression benchmark, not real-world validation. No personal CV data was used.
 - The hosted Supabase migration and signed-in end-to-end acceptance remain manual. See docs/HYBRID_JOB_MATCHING.md for commands and limitations.
+
+## GitHub Intelligence - 2026-10-28
+
+- Production build and lint passed. All 66 TypeScript tests passed, including 10 new GitHub validation, pagination, API failure, skill extraction, evidence grounding, CV comparison and ownership tests.
+- Isolated PostgreSQL 17 tests passed for analysis/approval save-retrieve, RLS separation, foreign CV rejection, unsupported skill rejection, revocation, anonymous denial, rate limits and migration rerun.
+- Anonymous GET and POST /api/github returned 401 on the production build.
+- Live official GitHub API check fetched octocat public repositories and Hello-World metadata/README successfully without sending CV data or making AI calls.
+- Hosted Supabase SQL application, signed-in browser acceptance and live GitHub-specific AI generation remain manual. See docs/GITHUB_INTELLIGENCE.md.
