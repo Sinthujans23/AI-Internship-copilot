@@ -41,6 +41,7 @@ export const coachingSchema = z.object({
 export type Coaching = z.infer<typeof coachingSchema>;
 export type PreferenceCheck = { name: string; status: "match" | "mismatch" | "unknown"; detail: string };
 export type CompanyReport = {
+  rag?: import("./rag-core").RagSummary;
   id: string; source_url: string; company_label: string; cv_id: string; cv_name: string; created_at: string;
   preferences: CareerPreferences; sources: Omit<ResearchSource, "text">[]; facts: CompanyFacts;
   preference_checks: PreferenceCheck[]; match: z.infer<typeof matchSchema> | null; rating_out_of_ten: number | null;

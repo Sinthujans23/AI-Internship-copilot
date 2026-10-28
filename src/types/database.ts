@@ -1,6 +1,8 @@
 export type Database = {
   public: {
     Tables: {
+      company_rag_documents:{Row:{id:string;user_id:string;session_id:string;source_url:string;title:string;source_index:number;source_kind:string;retrieved_at:string};Insert:{id:string;user_id:string;session_id:string;source_url:string;title:string;source_index:number;source_kind:string;retrieved_at:string};Update:never;Relationships:[]};
+      company_rag_chunks:{Row:{id:string;user_id:string;session_id:string;document_id:string;ordinal:number;content:string;content_hash:string;embedding:string;embedding_model:string};Insert:{id:string;user_id:string;session_id:string;document_id:string;ordinal:number;content:string;content_hash:string;embedding:string;embedding_model:string};Update:never;Relationships:[]};
       github_analyses: {
         Row:{id:string;user_id:string;username:string;repo_name:string;result:unknown;created_at:string};
         Insert:{user_id:string;username:string;repo_name:string;result:unknown};Update:never;Relationships:[];
@@ -37,6 +39,8 @@ export type Database = {
     };
     Views: Record<never, never>;
     Functions: {
+      reserve_company_rag:{Args:{p_url:string};Returns:string};
+      retrieve_company_chunks:{Args:{p_session:string;p_model:string;p_vector:string;p_document?:string;p_limit?:number};Returns:unknown};
       reserve_github_request:{Args:Record<string,never>;Returns:undefined};
       reserve_job_match: {Args:{p_cv_id:string;p_hash:string};Returns:string};
       reserve_cv_analysis: { Args: { p_cv_id: string; p_hash: string; p_force: boolean }; Returns: unknown };

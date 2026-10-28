@@ -66,3 +66,11 @@ The app now distinguishes invalid API keys, model access, quota exhaustion, rate
 - Anonymous GET and POST /api/github returned 401 on the production build.
 - Live official GitHub API check fetched octocat public repositories and Hello-World metadata/README successfully without sending CV data or making AI calls.
 - Hosted Supabase SQL application, signed-in browser acceptance and live GitHub-specific AI generation remain manual. See docs/GITHUB_INTELLIGENCE.md.
+
+## Company RAG Intelligence - 2026-10-28
+
+- Production build/lint and all 73 TypeScript tests passed; final focused RAG tests also passed after general-company versus vacancy isolation checks. All 16 Python matching/PDF/RAG tests passed.
+- Real pgvector/PostgreSQL 17 tests passed for semantic relevance order, document/model/dimension filters, ownership/RLS, foreign-source poisoning denial, anonymous denial and migration rerun.
+- Live OpenRouter openai/text-embedding-3-small returned 1,536-dimensional embeddings for three synthetic strings: relevant cosine 0.727, unrelated cosine 0.121. This is one sanity example, not a general quality benchmark.
+- Robots-aware live public HTML fetch on example.com succeeded. Anonymous GET/POST company-research endpoints returned 401.
+- No personal CV was used for live embedding checks. Hosted SQL application, signed-in end-to-end company research and live RAG fact/coaching generation still require manual acceptance. See docs/COMPANY_RAG.md.

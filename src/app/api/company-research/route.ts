@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { requireUser, apiError, AppError } from "@/lib/api";
 import { preferencesSchema } from "@/lib/company/schema";
-import { researchCompany } from "@/lib/company/research";
+import { researchCompanyRag } from "@/lib/company/rag-service";
 
 export const runtime = "nodejs";
 export const maxDuration = 240;
@@ -23,7 +23,7 @@ export async function POST(request: Request) {
     const { data: cv, error } = await supabase.from("cvs").select("id,file_name,skills,extracted_text").eq("user_id", user.id).order("created_at", { ascending: false }).limit(1).maybeSingle();
     if (error) throw new AppError("Could not load your CV. Check the SQL setup.", 503);
     if (!cv) throw new AppError("Upload your CV on the CV profile page first.", 422);
-    const result = await researchCompany(input.url, input.preferences, cv);
+    const result = await researchCompanyRag(supabase,user.id,input.url, input.preferences, cv);
     const saved = await supabase.from("company_reports").insert({ id: result.id, user_id: user.id, cv_id: cv.id, source_url: result.source_url, result });
     if (saved.error) throw new AppError("The report could not be saved. Run the company research SQL migration.", 503);
     return NextResponse.json(result, { status: 201, headers: { "Cache-Control": "private, no-store" } });

@@ -2,6 +2,7 @@
 import hmac
 import os
 import re
+import math
 
 import httpx
 from dotenv import load_dotenv
@@ -49,6 +50,33 @@ def require_service_key(x_api_key: str | None = Header(default=None)):
 
 
 app.include_router(pdf_router, dependencies=[Depends(require_service_key)])
+
+
+class EmbedInput(BaseModel):
+    texts: list[str] = Field(min_length=1, max_length=64)
+
+    @field_validator("texts")
+    @classmethod
+    def bounded_texts(cls, texts):
+        if any(not text.strip() or len(text) > 3000 for text in texts) or sum(map(len, texts)) > 100000:
+            raise ValueError("Embedding text size limit exceeded")
+        return texts
+
+
+@app.post("/embed", dependencies=[Depends(require_service_key)])
+async def embed(payload: EmbedInput):
+    vectors = await embed_texts(payload.texts)
+    try:
+        dimensions = len(vectors[0])
+        if not 1 <= dimensions <= 3072 or len(vectors) != len(payload.texts):
+            raise ValueError("Invalid dimensions")
+        if any(len(v) != dimensions or not all(math.isfinite(x) for x in v) or not any(x != 0 for x in v) for v in vectors):
+            raise ValueError("Invalid vectors")
+    except (IndexError, ValueError, TypeError):
+        raise HTTPException(502, "Invalid embedding response") from None
+    router = os.getenv("AI_PROVIDER") == "openrouter"
+    model = os.getenv("OPENROUTER_EMBEDDING_MODEL", "openai/text-embedding-3-small") if router else os.getenv("EMBEDDING_MODEL", "text-embedding-3-small")
+    return {"model": ("openrouter:" if router else "openai:") + model, "dimensions": dimensions, "vectors": vectors}
 
 
 class RankJob(BaseModel):

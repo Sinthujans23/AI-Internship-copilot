@@ -10,7 +10,7 @@ function docker(args, input) {
 }
 let started = false;
 try {
-  docker(["run", "--rm", "-d", "--network", "none", "--name", name, "-e", "POSTGRES_HOST_AUTH_METHOD=trust", "postgres:17-alpine"]);
+  docker(["run", "--rm", "-d", "--network", "none", "--name", name, "-e", "POSTGRES_HOST_AUTH_METHOD=trust", process.argv.includes("--rag")?"pgvector/pgvector:pg17":"postgres:17-alpine"]);
   started = true;
   let ready = false;
   for (let i = 0; i < 30; i++) {
@@ -19,7 +19,9 @@ try {
     await new Promise(resolve => setTimeout(resolve, 1000));
   }
   if (!ready) throw new Error("Temporary PostgreSQL did not become ready.");
-  const files = process.argv.includes("--github")
+  const files = process.argv.includes("--rag")
+    ? ["tests/sql/cv-v2-fixture.sql", "supabase/migrations/20261028030000_company_rag.sql", "tests/sql/rag-assertions.sql", "supabase/migrations/20261028030000_company_rag.sql"]
+    : process.argv.includes("--github")
     ? ["tests/sql/cv-v2-fixture.sql", "supabase/migrations/20261028020000_github_intelligence.sql", "tests/sql/github-assertions.sql", "supabase/migrations/20261028020000_github_intelligence.sql"]
     : process.argv.includes("--hybrid")
     ? ["tests/sql/cv-v2-fixture.sql", "supabase/migrations/20261028010000_hybrid_job_matching.sql", "tests/sql/hybrid-assertions.sql", "supabase/migrations/20261028010000_hybrid_job_matching.sql"]

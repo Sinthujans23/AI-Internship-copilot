@@ -1,0 +1,18 @@
+import type { CompanyReport } from "@/lib/company/schema";
+import { SkillChips } from "./skill-chips";
+
+export function CompanyRagEvidence({report}:{report:CompanyReport}){
+ const rag=report.rag;if(!rag)return <p className="rounded bg-slate-50 p-3 text-sm">Historical report: rerun research to create a retrieval-backed evidence review.</p>;
+ const oldest=Math.min(...rag.documents.map(d=>Date.parse(d.retrieved_at)));
+ const stale=!Number.isFinite(oldest)||Date.now()-oldest>86400000;
+ const groups=[{name:"Published company technology overview",items:rag.company_technologies},{name:"Explicitly required vacancy skills",items:rag.required_skills},{name:"Preferred vacancy skills",items:rag.preferred_skills}];
+ return <section className="space-y-4 rounded-xl border border-violet-200 bg-violet-50/40 p-4">
+  <h3 className="text-lg font-semibold">Company intelligence: retrieved evidence</h3>
+  <p className={`text-sm ${stale?"text-amber-800":"text-slate-600"}`}>{stale?"Evidence is over 24 hours old or its date is unknown. Rerun before applying.":"Evidence fetched within the last 24 hours; availability can still change."} {rag.documents.length} pages checked; {rag.retrieved_chunks.length} relevant passages retained.</p>
+  <p className="text-xs text-slate-600">General company statements are not vacancy requirements. Source citations verify what a page says, not that its claims are true or that the website is officially owned by the employer.</p>
+  {groups.map(group=><div key={group.name}><h4 className="font-semibold">{group.name}</h4>{group.items.length?<ul className="mt-2 space-y-3">{group.items.map((fact,i)=><li key={i} className="rounded border bg-white p-3"><b>{fact.value}</b><blockquote className="mt-1 whitespace-pre-wrap text-sm text-slate-600">{fact.quote}</blockquote>{report.sources[fact.source_index]&&<a href={report.sources[fact.source_index].url} target="_blank" rel="noopener noreferrer" className="break-all text-sm text-violet-700 underline">{report.sources[fact.source_index].url}</a>}</li>)}</ul>:<p className="text-sm text-slate-600">Unknown: no qualifying evidence retrieved.</p>}</div>)}
+  <div className="grid gap-4 sm:grid-cols-2"><div><h4 className="mb-2 font-semibold">Required skills not explicitly found in CV</h4>{rag.required_skills.length?<SkillChips skills={rag.missing_required} kind="missing"/>:<p className="text-sm">Unknown requirements; no gap score inferred.</p>}</div><div><h4 className="mb-2 font-semibold">Preferred skills not explicitly found in CV</h4>{rag.preferred_skills.length?<SkillChips skills={rag.missing_preferred} kind="missing"/>:<p className="text-sm">Unknown preferred skills.</p>}</div></div>
+  <p className="text-xs text-slate-600">The /10 match uses semantic alignment against explicitly required vacancy skills only. The lists above check explicit CV mentions. Missing evidence does not prove lack of ability; a score is not hiring probability.</p>
+  <details><summary className="cursor-pointer font-medium">Source references and retrieved passages</summary><ul className="mt-3 space-y-2 text-sm">{rag.documents.map(d=><li key={d.id}><a className="break-all text-violet-700 underline" href={d.url} target="_blank" rel="noopener noreferrer">{d.url}</a><p>Retrieved {new Date(d.retrieved_at).toLocaleString()}</p></li>)}</ul>{rag.retrieved_chunks.map(c=><details key={c.id} className="mt-3 rounded border bg-white p-3"><summary className="cursor-pointer text-sm">Source {c.source_index+1}, passage {c.ordinal+1}</summary><p className="mt-2 whitespace-pre-wrap text-sm">{c.text}</p><p className="mt-2 break-all text-xs text-slate-500">Document: {c.document_id}</p></details>)}</details>
+ </section>;
+}

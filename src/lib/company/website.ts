@@ -4,6 +4,7 @@ import { load } from "cheerio";
 import ipaddr from "ipaddr.js";
 import { AppError } from "@/lib/api";
 import type { ResearchSource } from "./schema";
+import { robotsAllows } from "./robots";
 
 export function isPublicAddress(address: string) {
   try { return ipaddr.process(address).range() === "unicast"; } catch { return false; }
@@ -13,6 +14,7 @@ export function companyUrl(input: string) {
   try { url = new URL(input.includes("://") ? input : `https://${input}`); }
   catch { throw new AppError("Enter a valid public company or job-post URL.", 400); }
   if (url.protocol !== "https:" || url.username || url.password || (url.port && url.port !== "443")) throw new AppError("Use a public HTTPS link without a username/password or custom port.", 400);
+  if(["linkedin.com","indeed.com","glassdoor.com"].some(host=>url.hostname===host||url.hostname.endsWith(`.${host}`)))throw new AppError("This platform is not supported for automated research. Use the official employer or permitted public job-post URL.",422);
   if (url.hostname === "localhost" || url.hostname.endsWith(".local") || (ipaddr.isValid(url.hostname.replace(/^\[|\]$/g, "")) && !isPublicAddress(url.hostname.replace(/^\[|\]$/g, "")))) throw new AppError("Private or local network links are not allowed.", 400);
   url.hash = "";
   return url;
@@ -30,7 +32,7 @@ export async function resolvePublicHost(hostname: string, resolver: AddressResol
   return addresses.find(address => address.family === 4) || addresses[0];
 }
 
-async function readHtml(url: URL, deadline: number): Promise<{ html: string; redirect?: string }> {
+async function readHtml(url: URL, deadline: number, robots=false): Promise<{ html: string; redirect?: string }> {
   if (Date.now() >= deadline) throw new AppError("Website research timed out. Use a direct job-post link.", 422);
   const hostname = url.hostname.replace(/^\[|\]$/g, "");
   const pinned = await resolvePublicHost(hostname, undefined, Math.min(8000, deadline - Date.now()));
@@ -40,11 +42,13 @@ async function readHtml(url: URL, deadline: number): Promise<{ html: string; red
     const req = request(url, {
       family: pinned.family,
       lookup: (_host, _options, callback) => callback(null, pinned.address, pinned.family),
-      headers: { "User-Agent": "AI-Internship-Copilot/1.0", Accept: "text/html", "Accept-Encoding": "identity" },
+      headers: { "User-Agent": "AI-Internship-Copilot/1.0", Accept: robots?"text/plain":"text/html", "Accept-Encoding": "identity" },
     }, response => {
       const status = response.statusCode || 500;
+      if(robots && (status===404||status===410)){response.resume();resolve({html:""});return;}
+      if(/noai|nosnippet|noindex/i.test(String(response.headers["x-robots-tag"]||""))){response.resume();reject(new AppError("Publisher restrictions prevent use of this page.",422));return;}
       if ([301, 302, 303, 307, 308].includes(status) && response.headers.location) { response.resume(); resolve({ html: "", redirect: new URL(response.headers.location, url).href }); return; }
-      if (status !== 200 || !/text\/html|application\/xhtml\+xml/i.test(response.headers["content-type"] || "") || (response.headers["content-encoding"] && response.headers["content-encoding"] !== "identity")) { response.resume(); reject(new AppError("The website could not be read as a public HTML page. Try a direct careers/job link.", 422)); return; }
+      if (status !== 200 || !(robots?/text\/plain/i:/text\/html|application\/xhtml\+xml/i).test(response.headers["content-type"] || "") || (response.headers["content-encoding"] && response.headers["content-encoding"] !== "identity")) { response.resume(); reject(new AppError("The website could not be read within its public access restrictions. Try an official public job link.", 422)); return; }
       const chunks: Buffer[] = []; let length = 0;
       response.on("data", (chunk: Buffer) => {
         length += chunk.length;
@@ -63,21 +67,33 @@ async function readHtml(url: URL, deadline: number): Promise<{ html: string; red
 
 export function extractWebsite(html: string, url: string) {
   const $ = load(html);
+  if($('meta[name="robots"],meta[name="AI-Internship-Copilot"] ').toArray().some(e=>/noai|nosnippet|noindex/i.test($(e).attr("content")||"")))throw new AppError("Publisher restrictions prevent using this page as evidence.",422);
   const title = $("title").text().trim().slice(0, 200) || new URL(url).hostname;
   const related = $("a[href]").map((_, element) => {
     const anchor = $(element); const href = anchor.attr("href") || "";
     if (!/career|jobs|engineering|technolog|certification/i.test(`${anchor.text()} ${href}`)) return "";
     try { const link = companyUrl(new URL(href, url).href); return link.origin === new URL(url).origin ? link.href : ""; } catch { return ""; }
   }).get().filter(Boolean);
-  $("script,style,noscript,iframe,svg,nav,footer,header,form").remove();
+  $("script,style,noscript,iframe,svg,nav,footer,header,form,[hidden],[aria-hidden='true'],[style*='display:none'],[style*='display: none']").remove();
   $("p,li,div,h1,h2,h3,h4,section,br,tr").append("\n");
   const text = $("body").text().replace(/[\t ]+/g, " ").replace(/\n\s*\n/g, "\n").trim().slice(0, 16000);
   return { title, text, related: [...new Set(related)].filter(value => value !== url).slice(0, 2) };
 }
 
-async function fetchSource(input: string, deadline: number) {
+async function fetchSource(input: string, deadline: number, policies:Map<string,string>) {
   let url = companyUrl(input);
   for (let redirects = 0; redirects <= 3; redirects++) {
+    if(!policies.has(url.origin)){
+      let robotsUrl=new URL("/robots.txt",url),policy:string|null=null;
+      for(let hop=0;hop<4;hop++){
+        const result=await readHtml(robotsUrl,deadline,true);
+        if(result.redirect){const next=companyUrl(result.redirect);if(next.origin!==url.origin)throw new AppError("Could not safely verify publisher robots policy.",422);robotsUrl=next;continue;}
+        policy=result.html;break;
+      }
+      if(policy===null)throw new AppError("Could not verify publisher robots policy.",422);
+      policies.set(url.origin,policy);
+    }
+    if(!robotsAllows(policies.get(url.origin)!,url.pathname+url.search))throw new AppError("The publisher's robots policy does not permit research of this URL.",422);
     const result = await readHtml(url, deadline);
     if (result.redirect) { url = companyUrl(result.redirect); continue; }
     const extracted = extractWebsite(result.html, url.href);
@@ -88,11 +104,12 @@ async function fetchSource(input: string, deadline: number) {
 }
 export async function fetchCompanySources(input: string) {
   const deadline = Date.now() + 35000;
-  const first = await fetchSource(input, deadline);
+  const policies=new Map<string,string>();
+  const first = await fetchSource(input, deadline,policies);
   const sources = [first.source];
   for (const link of first.related) {
     if (Date.now() >= deadline - 1000) break;
-    try { const next = await fetchSource(link, deadline); if (!sources.some(source => source.url === next.source.url)) sources.push(next.source); }
+    try { const next = await fetchSource(link, deadline,policies); if (!sources.some(source => source.url === next.source.url)) sources.push(next.source); }
     catch { /* A blocked extra page must not invalidate the readable primary page. */ }
   }
   return sources;

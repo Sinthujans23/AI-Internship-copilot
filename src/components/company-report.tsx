@@ -3,6 +3,7 @@ import Link from "next/link";
 import type { CompanyReport } from "@/lib/company/schema";
 import { SkillChips } from "@/components/skill-chips";
 import { CopyButton } from "@/components/copy-button";
+import { CompanyRagEvidence } from "./company-rag";
 
 function Evidence({ fact, report }: { fact: { source_index: number; quote: string }; report: CompanyReport }) {
   const source = report.sources[fact.source_index];
@@ -15,6 +16,7 @@ export function CompanyReportCard({ report, onDelete }: { report: CompanyReport;
     <div className="grid gap-2 sm:grid-cols-2">{report.preference_checks.map(check => <div key={check.name} className={`rounded-lg p-3 text-sm ${check.status === "match" ? "bg-emerald-50 text-emerald-900" : check.status === "mismatch" ? "bg-red-50 text-red-900" : "bg-amber-50 text-amber-900"}`}><b>{check.name}: {check.status === "unknown" ? "Needs verification" : check.status}</b><p>{check.detail}</p></div>)}</div>
     {report.warnings.length > 0 && <ul className="list-disc space-y-1 rounded bg-amber-50 p-4 pl-8 text-sm text-amber-900">{report.warnings.map((warning, index) => <li key={index}>{warning}</li>)}</ul>}
     <p>{report.coaching.fit_summary}</p>
+    <CompanyRagEvidence report={report} />
     <CompanyRequirements report={report} />
     {report.match && <div className="grid gap-4 sm:grid-cols-2"><div><h3 className="mb-2 font-semibold">Matched skills</h3><SkillChips skills={report.match.matched_skills} kind="matched" /></div><div><h3 className="mb-2 font-semibold">Missing skills</h3><SkillChips skills={report.match.missing_skills} kind="missing" /></div></div>}
     <details open className="rounded border border-slate-200 p-4"><summary className="font-semibold">Published stack, role and certifications</summary><div className="mt-4 space-y-4">
