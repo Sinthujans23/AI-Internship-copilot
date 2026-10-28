@@ -37,7 +37,7 @@ export function CareerRequirements({ initial, onSaved }: { initial: CareerPrefer
       <label className="sm:col-span-2">Other requirements<textarea maxLength={2000} rows={2} value={preferences.notes} onChange={e => update("notes", e.target.value)} className={field} /></label>
       <button className="rounded bg-violet-700 px-4 py-2 text-white disabled:opacity-50 sm:col-span-2">{busy ? "Saving..." : "Save requirements"}</button>
     </fieldset>
-    <p className="mt-3 text-sm text-slate-500">Automatic job search uses your target role, first preferred location and Remote setting. These public feeds do not verify salary, Hybrid or On-site preferences. Salary ranges, all locations and other requirements are also saved for company comparisons; missing evidence stays unknown.</p>
+    <p className="mt-3 text-sm text-slate-500">Job ranking uses your target role, all preferred locations and work mode. Salary is compared only when currency and period match. Missing values stay unknown. Other requirements guide company coaching; they are not automatically verified.</p>
     {error && <p role="alert" className="mt-3 text-red-700">{error}</p>}
     {message && <p role="status" className="mt-3 text-emerald-700">{message}</p>}
   </form>;

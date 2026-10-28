@@ -1,6 +1,10 @@
 export type Database = {
   public: {
     Tables: {
+      job_match_runs: {
+        Row: {id:string;user_id:string;cv_id:string;context_hash:string;result:unknown;created_at:string};
+        Insert: never; Update: {result?:unknown}; Relationships: [];
+      };
       cv_analysis_history: {
         Row: { id: string; user_id: string; cv_id: string; version: number; input_hash: string; status: string; result: unknown; created_at: string; finished_at: string | null };
         Insert: never; Update: never; Relationships: [];
@@ -25,6 +29,7 @@ export type Database = {
     };
     Views: Record<never, never>;
     Functions: {
+      reserve_job_match: {Args:{p_cv_id:string;p_hash:string};Returns:string};
       reserve_cv_analysis: { Args: { p_cv_id: string; p_hash: string; p_force: boolean }; Returns: unknown };
       finish_cv_analysis: { Args: { p_id: string; p_result: unknown }; Returns: unknown };
     };

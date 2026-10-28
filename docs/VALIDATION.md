@@ -48,3 +48,13 @@ The app now distinguishes invalid API keys, model access, quota exhaustion, rate
 - An isolated PostgreSQL 17 container ran the real migration with synthetic auth roles/users. Assertions passed for history save/retrieve, v1 preservation, RLS isolation, anonymous denial, immutable completed snapshots, cache, duplicate prevention, five-per-hour limits and outdated-result handling. Rerunning the migration inserted no duplicate legacy row and preserved all completed/failed/outdated snapshots.
 - Additional rewrite checks preserve qualifiers and disallow changing testing into development claims; focused v2 tests were rerun.
 - Hosted Supabase migration, live AI generation, signed-in Storage/browser acceptance and deployment remain manual. No private CVs were sent to an AI provider during automated verification.
+
+
+## Hybrid job matching - 2026-10-28
+
+- All 56 TypeScript tests passed; the final focused hybrid tests also passed. All 14 Python matching/PDF tests passed. Build and lint passed.
+- Real isolated PostgreSQL 17 assertions passed for save/retrieve, RLS cross-user denial, foreign CV rejection, anonymous denial, atomic rate limits and migration rerun.
+- Anonymous POST /api/jobs/search returned 401 on the production build.
+- Live public adapter checks returned two IFS Sri Lanka internships with official application links, zero current IFS India internships, and 100 Jobicy keyword-feed records before internship title filtering. Counts are time-dependent.
+- Offline and actual OpenRouter openai/text-embedding-3-small runs both returned mean Recall@3 and NDCG@3 of 1.000 on three synthetic CVs/eight labelled fictional jobs. This is a small regression benchmark, not real-world validation. No personal CV data was used.
+- The hosted Supabase migration and signed-in end-to-end acceptance remain manual. See docs/HYBRID_JOB_MATCHING.md for commands and limitations.

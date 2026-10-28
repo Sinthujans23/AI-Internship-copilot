@@ -4,6 +4,8 @@ A full-stack student application workspace. Paste a job post, upload a CV, compa
 
 Implementation for Steps 0–6 is present. Build/lint and offline tests validate code paths; live signup, database/storage ownership, paid AI calls, and deployed acceptance still need your configured accounts. See [step verification](docs/STEPS.md), [progress](docs/PROGRESS.md), and [deployment instructions](docs/DEPLOYMENT.md).
 
+Current Find Jobs behavior and setup: [Hybrid semantic matching guide](docs/HYBRID_JOB_MATCHING.md). Earlier step notes below describe historical versions of job discovery.
+
 ## Features
 
 - `/companies`: private career preferences and company-link shortlisting, source-backed stack/role/pay/work-mode evidence, CV similarity as a percentage and `/10`, grounded CV edits, email draft, learning tasks, project interview practice, and clearly unverified similar-company research leads. See [company research guide](docs/COMPANY_RESEARCH.md).
@@ -257,3 +259,6 @@ CV Profile now supports heading-aware section detection, an explainable /10 scor
 **Before using v2:** run `supabase/migrations/20261028000000_cv_analyzer_v2.sql` in your Supabase SQL Editor (or rerun `supabase/setup.sql`), then restart Next.js. No new keys are required. Existing v1 reviews are archived; new reviews use `cv_analysis_history` with owner RLS and a persistent five-analyses/hour limit. Updated CV uploads now preserve older versions and history until explicitly deleted. Content hashes detect stale reviews. Existing PDF editing and company/job matching continue to use the latest CV.
 
 See [CV Analyzer v2 setup, rubric, security, limitations and test checklist](docs/CV_ANALYZER_V2.md). Run unit/regression checks with `npm.cmd test`; isolated PostgreSQL migration/RLS tests with `node scripts/test-cv-v2-db.mjs` (Docker required).
+## Hybrid semantic job recommendations
+
+Find Jobs now combines required/preferred skill coverage, FastAPI embeddings and saved career preferences, with explanations and owned match snapshots. See [setup, migration, sources, scoring and tests](docs/HYBRID_JOB_MATCHING.md). Existing projects must run `supabase/migrations/20261028010000_hybrid_job_matching.sql` before using the upgraded search.

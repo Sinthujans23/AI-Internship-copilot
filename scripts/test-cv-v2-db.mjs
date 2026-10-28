@@ -19,7 +19,10 @@ try {
     await new Promise(resolve => setTimeout(resolve, 1000));
   }
   if (!ready) throw new Error("Temporary PostgreSQL did not become ready.");
-  for (const file of ["tests/sql/cv-v2-fixture.sql", "supabase/migrations/20261028000000_cv_analyzer_v2.sql", "tests/sql/cv-v2-assertions.sql", "supabase/migrations/20261028000000_cv_analyzer_v2.sql"]) {
+  const files = process.argv.includes("--hybrid")
+    ? ["tests/sql/cv-v2-fixture.sql", "supabase/migrations/20261028010000_hybrid_job_matching.sql", "tests/sql/hybrid-assertions.sql", "supabase/migrations/20261028010000_hybrid_job_matching.sql"]
+    : ["tests/sql/cv-v2-fixture.sql", "supabase/migrations/20261028000000_cv_analyzer_v2.sql", "tests/sql/cv-v2-assertions.sql", "supabase/migrations/20261028000000_cv_analyzer_v2.sql"];
+  for (const file of files) {
     docker(["exec", "-i", name, "psql", "-U", "postgres", "-v", "ON_ERROR_STOP=1"], readFileSync(file, "utf8"));
     console.log(`PASS ${file}`);
   }

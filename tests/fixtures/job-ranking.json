@@ -1,0 +1,18 @@
+{
+  "description": "Synthetic student CVs and fictional jobs, manually labelled by role, skills and preferences. Grades: 0 unrelated, 1 partial, 2 good, 3 strong. Never used as live listings.",
+  "jobs": [
+    {"id":"frontend","title":"Frontend Intern","location":"Colombo, Sri Lanka","description":"Required skills:\nReact.js TypeScript HTML CSS\nPreferred skills:\nGit"},
+    {"id":"fullstack","title":"Full Stack Intern","location":"Chennai, India","description":"Required skills:\nReact Node.js SQL\nPreferred skills:\nTypeScript Python"},
+    {"id":"backend","title":"Backend Python Intern","location":"Colombo, Sri Lanka","description":"Required skills:\nPython FastAPI SQL\nPreferred skills:\nDocker Git"},
+    {"id":"data","title":"Data Science Intern","location":"Bengaluru, India","description":"Required skills:\nPython Pandas NumPy SQL\nPreferred skills:\nPyTorch"},
+    {"id":"analytics","title":"Data Analyst Intern","location":"Colombo, Sri Lanka","description":"Required skills:\nSQL Python Excel\nPreferred skills:\nPandas"},
+    {"id":"design","title":"UX Design Intern","location":"Colombo, Sri Lanka","description":"Required skills:\nFigma Communication\nPreferred skills:\nHTML CSS"},
+    {"id":"java","title":"Java Backend Intern","location":"Chennai, India","description":"Required skills:\nJava SQL\nPreferred skills:\nDocker"},
+    {"id":"sales","title":"Sales Intern","location":"London, UK","description":"Required skills:\nCommunication Excel\nResponsibilities:\nCustomer calls"}
+  ],
+  "profiles": [
+    {"name":"frontend-student","role":"Frontend Intern","locations":["Colombo","Chennai"],"skills":["ReactJS","TypeScript","HTML","CSS","Git"],"text":"Computer science student. Built a ReactJS TypeScript frontend with responsive HTML CSS. Used Git for version control.","labels":{"frontend":3,"fullstack":2,"design":1,"backend":0,"data":0,"analytics":0,"java":0,"sales":0}},
+    {"name":"data-student","role":"Data Science Intern","locations":["Bengaluru","Colombo"],"skills":["Python","Pandas","NumPy","SQL","Excel"],"text":"Statistics student. Cleaned survey datasets using Python Pandas and NumPy. Queried SQL databases and made Excel reports.","labels":{"data":3,"analytics":3,"backend":1,"fullstack":0,"frontend":0,"design":0,"java":0,"sales":0}},
+    {"name":"backend-student","role":"Backend Intern","locations":["Colombo","Chennai"],"skills":["Python","FastAPI","SQL","Docker","Git"],"text":"Built backend APIs with Python FastAPI and SQL. Packaged a coursework API with Docker and tracked changes in Git.","labels":{"backend":3,"java":1,"fullstack":1,"analytics":1,"data":1,"frontend":0,"design":0,"sales":0}}
+  ]
+}

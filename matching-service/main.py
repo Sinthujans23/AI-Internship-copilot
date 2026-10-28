@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, Header, HTTPException
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from matching import score_embeddings
+from matching import score_embeddings, cosine
 from pdf_routes import router as pdf_router
 
 load_dotenv()
@@ -49,6 +49,31 @@ def require_service_key(x_api_key: str | None = Header(default=None)):
 
 
 app.include_router(pdf_router, dependencies=[Depends(require_service_key)])
+
+
+class RankJob(BaseModel):
+    id: str = Field(min_length=1, max_length=250)
+    text: str = Field(min_length=1, max_length=6000)
+
+
+class RankInput(BaseModel):
+    cv_text: str = Field(min_length=1, max_length=50000)
+    jobs: list[RankJob] = Field(min_length=1, max_length=30)
+
+
+@app.post("/rank", dependencies=[Depends(require_service_key)])
+async def rank(payload: RankInput):
+    # One private batch avoids one network call per job. No CV text is logged or cached.
+    text = re.sub(r"\s+", " ", payload.cv_text).strip()
+    if not text or len({job.id for job in payload.jobs}) != len(payload.jobs):
+        raise HTTPException(422, "Provide CV text and unique job IDs")
+    chunks = [text[i:i + 2000] for i in range(0, len(text), 1800)]
+    vectors = await embed_texts(chunks + [job.text for job in payload.jobs])
+    try:
+        return {"scores": {job.id: sum(cosine(vectors[len(chunks)+i], v) for v in vectors[:len(chunks)]) / len(chunks)
+                           for i, job in enumerate(payload.jobs)}}
+    except (ValueError, TypeError, OverflowError, IndexError):
+        raise HTTPException(502, "Could not calculate semantic relevance") from None
 
 
 async def embed_texts(texts: list[str]) -> list[list[float]]:
