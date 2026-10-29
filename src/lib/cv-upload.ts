@@ -15,12 +15,12 @@ export async function prepareCvFile(file: unknown) {
   if (text.length > 50000) throw new AppError("CV text is too long. Upload a shorter CV (under 50,000 characters).", 400);
   return { buffer, text, skills: extractCvSkills(text), name: file.name.slice(0, 255) };
 }
-export async function saveCvVersion(client: SupabaseClient<Database>, userId: string, file: Awaited<ReturnType<typeof prepareCvFile>>) {
+export async function saveCvVersion(client: SupabaseClient<Database>, userId: string, file: Awaited<ReturnType<typeof prepareCvFile>>, lineage: {parent_cv_id?:string;target_application_id?:string;tailoring_id?:string;accepted_suggestions?:unknown} = {}) {
   const id = crypto.randomUUID();
   const path = `${userId}/${id}.pdf`;
   const upload = await client.storage.from("cvs").upload(path, file.buffer, { contentType: "application/pdf" });
   if (upload.error) throw upload.error;
-  const { data, error } = await client.from("cvs").insert({ id, user_id: userId, file_path: path, file_name: file.name, extracted_text: file.text, skills: file.skills, analysis: { skills: file.skills, experience: [], projects: [], education: [], qualifications: [] } }).select("*").single();
+  const { data, error } = await client.from("cvs").insert({ ...lineage, id, user_id: userId, file_path: path, file_name: file.name, extracted_text: file.text, skills: file.skills, analysis: { skills: file.skills, experience: [], projects: [], education: [], qualifications: [] } }).select("*").single();
   if (error) {
     await client.storage.from("cvs").remove([path]);
     throw error;

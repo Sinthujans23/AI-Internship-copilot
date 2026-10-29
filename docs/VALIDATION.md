@@ -89,3 +89,11 @@ The app now distinguishes invalid API keys, model access, quota exhaustion, rate
 - Local isolated PostgreSQL: create, edit, stage transitions, history retrieval, duplicate rejection, foreign CV/report rejection, cross-user reads/updates/deletes, anonymous access denial, deletion cascade and migration rerun passed.
 - Typecheck, ESLint and production build passed. Build encoding issue corrected to UTF-8.
 - Hosted migration and signed-in drag/drop, keyboard/mobile workflow remain manual checks. See APPLICATION_TRACKER.md.
+
+## 2026-10-29 — job-specific CV tailoring
+
+- 87 TypeScript tests passed; focused tailoring/upload tests rerun with version lineage assertions.
+- 7 real PyMuPDF editing/export regression tests passed.
+- Isolated PostgreSQL tests passed for accept/reject persistence, immutable results, foreign ownership rejection, new CV lineage, original preservation, migration reruns and source/job deletion behavior. A foreign-key trigger ordering issue found by the added deletion test was fixed and rechecked.
+- Typecheck, lint and production build passed.
+- Hosted migration and live OpenRouter/signed-in browser export workflow remain manual. See CV_TAILORING.md, including conservative extractive wording limits.

@@ -271,3 +271,6 @@ Find Jobs now combines required/preferred skill coverage, FastAPI embeddings and
 
 ### Restored application tracker
 See [Application Tracker](docs/APPLICATION_TRACKER.md) for migration, Kanban, integrations and testing instructions.
+
+### Job-specific CV tailoring
+See [CV tailoring](docs/CV_TAILORING.md) for setup, conservative evidence checks, individual review and PDF version export.

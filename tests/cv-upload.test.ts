@@ -18,9 +18,10 @@ test("saving a new PDF version preserves old data and has no carried-over review
   const operations: string[] = [];
   let inserted: Record<string, unknown> = {};
   const client = { storage: { from() { return { async upload(path: string) { operations.push(path); return { error: null }; }, async remove() { assert.fail("old file must not be deleted"); } }; } }, from() { return { insert(value: Record<string, unknown>) { inserted = value; return this; }, select() { return this; }, async single() { return { data: inserted, error: null }; } }; } } as unknown as SupabaseClient<Database>;
-  await saveCvVersion(client, "owner", { buffer: Buffer.from("pdf"), text: "fresh text", skills: ["Python"], name: "edited.pdf" });
+  await saveCvVersion(client, "owner", { buffer: Buffer.from("pdf"), text: "fresh text", skills: ["Python"], name: "edited.pdf" }, {parent_cv_id:"source-cv",target_application_id:"target-job",tailoring_id:"review-session",accepted_suggestions:[{suggested_text:"Existing evidence"}]});
   assert.equal(operations.length, 1); assert.ok(operations[0].startsWith("owner/"));
   assert.equal(inserted.user_id, "owner");
+  assert.equal(inserted.parent_cv_id,"source-cv"); assert.equal(inserted.target_application_id,"target-job"); assert.equal(inserted.tailoring_id,"review-session");
   assert.equal("cv_review_v2" in (inserted.analysis as object), false);
 });
 test("failed database insert cleans up only the newly uploaded file", async () => {

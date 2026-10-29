@@ -1,6 +1,7 @@
 export type Database = {
   public: {
     Tables: {
+      cv_tailoring:{Row:import("@/lib/tailoring/schema").TailoringRun;Insert:{user_id:string;cv_id:string;application_id:string;result:import("@/lib/tailoring/schema").TailoringResult};Update:never;Relationships:[]};
       learning_roadmaps:{Row:import("@/lib/learning/schema").SavedRoadmap;Insert:never;Update:never;Relationships:[]};
       learning_tasks:{Row:import("@/lib/learning/schema").LearningTask;Insert:never;Update:never;Relationships:[]};
       learning_advice:{Row:{id:string;user_id:string;roadmap_id:string;progress_hash:string;result:import("@/lib/learning/schema").Advice;mode:string;created_at:string};Insert:{user_id:string;roadmap_id:string;progress_hash:string;result:import("@/lib/learning/schema").Advice;mode:string};Update:never;Relationships:[]};
@@ -32,7 +33,7 @@ export type Database = {
         Insert: { id?: string; user_id: string; cv_id?: string | null; source_url: string; result: import("@/lib/company/schema").CompanyReport; created_at?: string };
         Update: { result?: import("@/lib/company/schema").CompanyReport }; Relationships: [];
       };
-      cvs: { Row: { id:string; user_id:string; file_path:string; file_name:string; extracted_text:string; skills:string[]; analysis:unknown; created_at:string }; Insert: { id?:string; user_id:string; file_path:string; file_name:string; extracted_text:string; skills?:string[]; analysis?:unknown }; Update: { analysis?:unknown; file_name?:string; skills?:string[] }; Relationships: [] };
+      cvs: { Row: { parent_cv_id:string|null;target_application_id:string|null;tailoring_id:string|null;accepted_suggestions:unknown; id:string; user_id:string; file_path:string; file_name:string; extracted_text:string; skills:string[]; analysis:unknown; created_at:string }; Insert: { parent_cv_id?:string|null;target_application_id?:string|null;tailoring_id?:string|null;accepted_suggestions?:unknown; id?:string; user_id:string; file_path:string; file_name:string; extracted_text:string; skills?:string[]; analysis?:unknown }; Update: { analysis?:unknown; file_name?:string; skills?:string[] }; Relationships: [] };
       application_history: {Row:{id:string;application_id:string;user_id:string;old_status:string|null;new_status:string;event:string;created_at:string};Insert:never;Update:never;Relationships:[]};
       applications: {
         Row: import("@/lib/applications").TrackerFields & { id: string; user_id: string; company: string; role: string; status: typeof import("@/lib/applications").applicationStatuses[number]; job_text: string; job_analysis: import("@/lib/job-schema").JobDetails | null; match_score: number | null; match_result: import("@/lib/matching-schema").SkillMatch | null; agent_result: import("@/lib/agent-schema").Preparation | null; created_at: string };
@@ -43,6 +44,8 @@ export type Database = {
     };
     Views: Record<never, never>;
     Functions: {
+      reserve_tailoring_request:{Args:Record<string,never>;Returns:undefined};
+      decide_tailoring_suggestion:{Args:{p_id:string;p_index:number;p_decision:string};Returns:undefined};
       reserve_learning_request:{Args:Record<string,never>;Returns:undefined};
       save_learning_roadmap:{Args:{p_input:unknown;p_context:unknown;p_plan:unknown;p_mode:string;p_parent?:string};Returns:string};
       update_learning_task:{Args:{p_id:string;p_status:string;p_notes:string;p_url:string|null;p_expected:string};Returns:undefined};

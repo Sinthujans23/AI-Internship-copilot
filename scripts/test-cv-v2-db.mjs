@@ -19,7 +19,9 @@ try {
     await new Promise(resolve => setTimeout(resolve, 1000));
   }
   if (!ready) throw new Error("Temporary PostgreSQL did not become ready.");
-  const files = process.argv.includes("--tracker")
+  const files = process.argv.includes("--tailoring")
+    ? ["tests/sql/cv-v2-fixture.sql", "supabase/migrations/20261026000000_step1_applications.sql", "supabase/migrations/20261027050000_company_research.sql", "supabase/migrations/20261029000000_application_tracker.sql", "supabase/migrations/20261029010000_cv_tailoring.sql", "tests/sql/tailoring-assertions.sql", "supabase/migrations/20261029010000_cv_tailoring.sql"]
+    : process.argv.includes("--tracker")
     ? ["tests/sql/cv-v2-fixture.sql", "supabase/migrations/20261026000000_step1_applications.sql", "supabase/migrations/20261027050000_company_research.sql", "supabase/migrations/20261029000000_application_tracker.sql", "tests/sql/tracker-assertions.sql", "supabase/migrations/20261029000000_application_tracker.sql"]
     : process.argv.includes("--learning")
     ? ["tests/sql/cv-v2-fixture.sql", "supabase/migrations/20261028040000_learning_roadmaps.sql", "tests/sql/learning-assertions.sql", "supabase/migrations/20261028040000_learning_roadmaps.sql"]

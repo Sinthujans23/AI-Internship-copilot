@@ -6,7 +6,7 @@ import { pdfPageSchema, pdfEditsSchema, type PdfEdit, type PdfPage } from "@/lib
 
 const fonts = { helv: "Helvetica", hebo: "Helvetica bold", heit: "Helvetica italic", tiro: "Times", tibo: "Times bold", cour: "Courier" };
 type Block = PdfPage["blocks"][number];
-export function PdfEditor({ cvId, cvName, suggestions }: { cvId: string; cvName: string; suggestions: { original_quote: string; suggested_text: string; reason: string }[] }) {
+export function PdfEditor({ cvId, cvName, suggestions, tailoringId }: { cvId: string; cvName: string; tailoringId?:string; suggestions: { original_quote: string; suggested_text: string; reason: string }[] }) {
   const [pageNumber, setPageNumber] = useState(0);
   const [page, setPage] = useState<PdfPage | null>(null);
   const [selected, setSelected] = useState<Block | null>(null);
@@ -58,6 +58,7 @@ export function PdfEditor({ cvId, cvName, suggestions }: { cvId: string; cvName:
     setBusy(true); setError("");
     try {
       const body = new FormData();
+      if(tailoringId)body.set("tailoring_id",tailoringId);
       body.set("file", new File([preview.blob], `${cvName.replace(/\.pdf$/i, "")}-tailored.pdf`, { type: "application/pdf" }));
       // No replace_id: preserve the source PDF and create a new current CV version.
       const response = await fetch("/api/cvs", { method: "POST", body });
@@ -69,7 +70,7 @@ export function PdfEditor({ cvId, cvName, suggestions }: { cvId: string; cvName:
   return <div className="space-y-5"><div><h1 className="text-3xl font-bold">Edit your PDF CV</h1><p className="mt-2 break-all text-slate-600">{cvName}</p><a href={`/api/cvs/download?cv_id=${encodeURIComponent(cvId)}`} className="text-violet-700 underline">Download source PDF</a></div>
     <p className="rounded bg-amber-50 p-4 text-sm text-amber-900">Select an original text block and replace text in that same area. Other content/page geometry is retained; text that does not fit is rejected. Standard replacement fonts can differ from embedded originals. Upright Latin text only; custom fonts, rotated text, scanned and signed PDFs are not supported. Preview before saving. The source PDF stays unchanged.</p>
     {error && <p role="alert" className="rounded bg-red-50 p-3 text-red-800">{error}</p>}
-    {suggestions.length > 0 && <details className="rounded border border-slate-200 bg-white p-4"><summary className="font-semibold">Company-tailored suggestions for this CV</summary><div className="mt-3 space-y-4">{suggestions.map((suggestion, index) => <div key={index} className="space-y-2"><blockquote className="text-sm text-slate-500">{suggestion.original_quote}</blockquote><p>{suggestion.suggested_text}</p><p className="text-sm text-slate-600">{suggestion.reason}</p><button disabled={!selected || busy} onClick={() => { setText(suggestion.suggested_text); invalidate(); }} className="rounded border px-3 py-1 text-sm">Use in selected block</button></div>)}</div></details>}
+    {suggestions.length > 0 && <details className="rounded border border-slate-200 bg-white p-4"><summary className="font-semibold">Reviewed tailoring suggestions for this CV</summary><div className="mt-3 space-y-4">{suggestions.map((suggestion, index) => <div key={index} className="space-y-2"><blockquote className="text-sm text-slate-500">{suggestion.original_quote}</blockquote><p>{suggestion.suggested_text}</p><p className="text-sm text-slate-600">{suggestion.reason}</p><button disabled={!selected || busy || Boolean(tailoringId && !text.includes(suggestion.original_quote))} onClick={() => { setText(tailoringId ? text.replace(suggestion.original_quote, suggestion.suggested_text) : suggestion.suggested_text); invalidate(); }} className="rounded border px-3 py-1 text-sm">Use in selected block</button></div>)}</div></details>}
     <div className="grid gap-5 lg:grid-cols-[minmax(0,1.3fr)_minmax(280px,1fr)]">
       <section className="min-w-0 rounded-xl border border-slate-200 bg-white p-3"><div className="mb-3 flex items-center justify-between gap-3"><button disabled={loading || busy || pageNumber === 0} onClick={() => setPageNumber(value => value - 1)} className="rounded border px-3 py-1">Previous</button><span>Page {pageNumber + 1}{page ? ` / ${page.page_count}` : ""}</span><button disabled={loading || busy || !page || pageNumber + 1 >= page.page_count} onClick={() => setPageNumber(value => value + 1)} className="rounded border px-3 py-1">Next</button></div>
         {loading && <p role="status" className="p-8">Rendering original PDF page...</p>}
