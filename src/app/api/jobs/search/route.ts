@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { requireUser, apiError, AppError } from "@/lib/api";
 import { createHash } from "node:crypto";
 import { hybridPublicJobs } from "@/lib/job-feeds";
-import { MATCH_VERSION, rankHybrid, skillsIn, eligibleJobs } from "@/lib/hybrid-jobs";
+import { MATCH_VERSION, rankHybrid, skillsIn, eligibleJobs, isInternshipTitle } from "@/lib/hybrid-jobs";
 import { hybridResponseSchema } from "@/lib/hybrid-schema";
 import { preferencesSchema, defaultPreferences } from "@/lib/company/schema";
 import { semanticJobs } from "@/lib/job-semantic";
@@ -27,7 +27,7 @@ export async function POST() {
     if(reserveError) throw new AppError(reserveError.message.includes("rate limit")?"Job search rate limit reached. Please try later.":"Could not start job matching.",reserveError.message.includes("rate limit")?429:503);
     const feed = await hybridPublicJobs();
     const skills=[...cv.skills,...skillsIn(cv.extracted_text)];
-    const candidates=rankHybrid(feed.jobs.filter(j=>/intern|trainee|working student|werkstudent|praktik/i.test(j.title)),skills,preferences).slice(0,30);
+    const candidates=rankHybrid(feed.jobs.filter(j=>isInternshipTitle(j.title)),skills,preferences).slice(0,30);
     let semantic:Record<string,number>={};
     try { semantic=await semanticJobs(cv.extracted_text,candidates); }
     catch { feed.warnings.push("Semantic matching unavailable. Showing skill and preference rankings only. Check the matching service and embedding provider credits."); }

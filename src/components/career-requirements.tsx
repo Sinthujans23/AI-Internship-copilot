@@ -37,7 +37,7 @@ export function CareerRequirements({ initial, onSaved }: { initial: CareerPrefer
       <label className="sm:col-span-2">Other requirements<textarea maxLength={2000} rows={2} value={preferences.notes} onChange={e => update("notes", e.target.value)} className={field} /></label>
       <button className="rounded bg-violet-700 px-4 py-2 text-white disabled:opacity-50 sm:col-span-2">{busy ? "Saving..." : "Save requirements"}</button>
     </fieldset>
-    <p className="mt-3 text-sm text-slate-500">Job ranking uses your target role, all preferred locations and work mode. Salary is compared only when currency and period match. Missing values stay unknown. Other requirements guide company coaching; they are not automatically verified.</p>
+    <p className="mt-3 text-sm text-slate-500">Save to rerun the search using these requirements. Matching listing fields come first; known mismatches are hidden by default. Salary is compared only in the same currency/period. Missing details and free-text requirements are explicitly marked for verification, never assumed satisfied.</p>
     {error && <p role="alert" className="mt-3 text-red-700">{error}</p>}
     {message && <p role="status" className="mt-3 text-emerald-700">{message}</p>}
   </form>;

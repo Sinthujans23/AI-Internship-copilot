@@ -49,3 +49,31 @@ test("invalid persisted results and partial semantic responses are rejected",asy
   try { global.fetch=async()=>new Response(JSON.stringify({scores:{wrong:0.8}})); await assert.rejects(()=>semanticJobs("CV text",rankHybrid([job],[],defaultPreferences)),/Incomplete/); }
   finally {global.fetch=oldFetch;if(oldUrl===undefined)delete process.env.MATCHING_SERVICE_URL;else process.env.MATCHING_SERVICE_URL=oldUrl;if(oldKey===undefined)delete process.env.MATCHING_SERVICE_API_KEY;else process.env.MATCHING_SERVICE_API_KEY=oldKey;}
 });
+
+test("requirements take priority over a high CV score and preserve unknown data",()=>{
+ const prefs={...defaultPreferences,target_role:"Frontend Intern",locations:["Colombo"],work_mode:"Remote" as const};
+ const ranked=rankHybrid([{...job,id:"foreign",location:"Berlin, Germany",url:"https://example.com/foreign"},{...job,id:"local",description:"Required skills:\nPython",url:"https://example.com/local"}],["React","TypeScript"],prefs,{foreign:1,local:0.1});
+ assert.equal(ranked[0].id,"local");assert.equal(ranked[1].preference_fit,"mismatch");
+ assert.ok(ranked[1].preference_checks?.some(c=>c.name==="Location"&&c.status==="mismatch"));
+ const [unknown]=rankHybrid([{...job,location:"Remote"}],[],{...prefs,salary_min:10000});
+ assert.equal(unknown.preference_fit,"unknown");assert.ok(unknown.preference_checks?.some(c=>c.name==="Salary"&&c.status==="unknown"));
+});
+test("free-text requirements are never silently marked verified",()=>{
+ const [result]=rankHybrid([job],[],{...defaultPreferences,target_role:"Frontend",notes:"Must offer visa sponsorship and no night shifts"});
+ assert.equal(result.preference_checks?.find(c=>c.name==="Other requirements")?.status,"unknown");
+});
+test("query-string vacancy identifiers are preserved during deduplication",()=>{
+ assert.equal(eligibleJobs([{...job,url:"https://example.com/jobs?id=1"},{...job,id:"2",title:"Backend Intern",url:"https://example.com/jobs?id=2"}]).length,2);
+});
+import {isInternshipTitle} from "../src/lib/hybrid-jobs";
+test("international jobs do not become internships through substring matching",()=>{
+ assert.equal(isInternshipTitle("International Sales Manager"),false);
+ assert.equal(isInternshipTitle("Frontend Internship"),true);
+ assert.equal(isInternshipTitle("Backend Trainee"),true);
+});
+test("country-wide listings do not falsely confirm a requested city",()=>{
+ const [broad]=rankHybrid([{...job,location:"Sri Lanka"}],[],{...defaultPreferences,target_role:"Frontend",locations:["Colombo"]});
+ assert.equal(broad.preference_checks?.find(c=>c.name==="Location")?.status,"unknown");
+ const [city]=rankHybrid([{...job,location:"Colombo"}],[],{...defaultPreferences,target_role:"Frontend",locations:["Sri Lanka"]});
+ assert.equal(city.preference_checks?.find(c=>c.name==="Location")?.status,"match");
+});
