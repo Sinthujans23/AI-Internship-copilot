@@ -19,7 +19,9 @@ try {
     await new Promise(resolve => setTimeout(resolve, 1000));
   }
   if (!ready) throw new Error("Temporary PostgreSQL did not become ready.");
-  const files = process.argv.includes("--rag")
+  const files = process.argv.includes("--learning")
+    ? ["tests/sql/cv-v2-fixture.sql", "supabase/migrations/20261028040000_learning_roadmaps.sql", "tests/sql/learning-assertions.sql", "supabase/migrations/20261028040000_learning_roadmaps.sql"]
+    : process.argv.includes("--rag")
     ? ["tests/sql/cv-v2-fixture.sql", "supabase/migrations/20261028030000_company_rag.sql", "tests/sql/rag-assertions.sql", "supabase/migrations/20261028030000_company_rag.sql"]
     : process.argv.includes("--github")
     ? ["tests/sql/cv-v2-fixture.sql", "supabase/migrations/20261028020000_github_intelligence.sql", "tests/sql/github-assertions.sql", "supabase/migrations/20261028020000_github_intelligence.sql"]

@@ -74,3 +74,11 @@ The app now distinguishes invalid API keys, model access, quota exhaustion, rate
 - Live OpenRouter openai/text-embedding-3-small returned 1,536-dimensional embeddings for three synthetic strings: relevant cosine 0.727, unrelated cosine 0.121. This is one sanity example, not a general quality benchmark.
 - Robots-aware live public HTML fetch on example.com succeeded. Anonymous GET/POST company-research endpoints returned 401.
 - No personal CV was used for live embedding checks. Hosted SQL application, signed-in end-to-end company research and live RAG fact/coaching generation still require manual acceptance. See docs/COMPANY_RAG.md.
+
+## Adaptive Learning Roadmap - 2026-10-29
+
+- Build/lint passed and 79 TypeScript tests passed. Final focused learning tests passed after bounding fallback topic lengths. Existing company/CV/job tests remain in the suite.
+- Isolated PostgreSQL tests passed for roadmap save/retrieve, status/evidence persistence, regeneration preserving completed tasks, stale-tab conflicts, atomic rollback, cross-user RLS, foreign CV rejection, anonymous denial and migration rerun.
+- Anonymous GET/POST /api/learning returned 401 on the production build.
+- Live structured AI generation with a synthetic profile returned a valid one-week roadmap with two tasks totalling 102 minutes for a two-hour budget. No personal CV data was sent.
+- Hosted migration and signed-in end-to-end acceptance remain manual. See docs/LEARNING_ROADMAP.md.

@@ -12,6 +12,7 @@ export function AppShell({ children, email }: { children: React.ReactNode; email
             <Link href="/jobs" className="text-violet-700 underline">Find jobs</Link>
             <Link href="/companies" className="text-violet-700 underline">Company shortlist</Link>
             <Link href="/github" className="text-violet-700 underline">GitHub intelligence</Link>
+            <Link href="/learning" className="text-violet-700 underline">Learning roadmap</Link>
             <span className="break-all text-sm text-slate-600">{email}</span>
             {/* A server action clears cookies before redirecting to login. */}
             <form action={logout}><button className="rounded border border-slate-300 px-3 py-2">Log out</button></form>

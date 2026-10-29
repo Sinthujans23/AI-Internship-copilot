@@ -8,6 +8,8 @@ Current Find Jobs behavior and setup: [Hybrid semantic matching guide](docs/HYBR
 
 ## Features
 
+- `/learning`: adaptive weekly roadmaps, task progress/evidence, preserved versions and progress-based next steps. See [Learning Roadmap setup and tests](docs/LEARNING_ROADMAP.md) and run its SQL migration.
+
 - `/companies`: evidence-grounded RAG research with pgvector retrieval, source snippets, separate required/preferred skills and freshness indicators. Run the [Company RAG migration and setup](docs/COMPANY_RAG.md) before new research.
 
 - `/github`: public GitHub project evidence, AI-assisted documentation review, CV comparison and student-approved skill drafts. See [GitHub Intelligence setup and tests](docs/GITHUB_INTELLIGENCE.md); run its new SQL migration before use.

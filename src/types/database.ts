@@ -1,6 +1,9 @@
 export type Database = {
   public: {
     Tables: {
+      learning_roadmaps:{Row:import("@/lib/learning/schema").SavedRoadmap;Insert:never;Update:never;Relationships:[]};
+      learning_tasks:{Row:import("@/lib/learning/schema").LearningTask;Insert:never;Update:never;Relationships:[]};
+      learning_advice:{Row:{id:string;user_id:string;roadmap_id:string;progress_hash:string;result:import("@/lib/learning/schema").Advice;mode:string;created_at:string};Insert:{user_id:string;roadmap_id:string;progress_hash:string;result:import("@/lib/learning/schema").Advice;mode:string};Update:never;Relationships:[]};
       company_rag_documents:{Row:{id:string;user_id:string;session_id:string;source_url:string;title:string;source_index:number;source_kind:string;retrieved_at:string};Insert:{id:string;user_id:string;session_id:string;source_url:string;title:string;source_index:number;source_kind:string;retrieved_at:string};Update:never;Relationships:[]};
       company_rag_chunks:{Row:{id:string;user_id:string;session_id:string;document_id:string;ordinal:number;content:string;content_hash:string;embedding:string;embedding_model:string};Insert:{id:string;user_id:string;session_id:string;document_id:string;ordinal:number;content:string;content_hash:string;embedding:string;embedding_model:string};Update:never;Relationships:[]};
       github_analyses: {
@@ -39,6 +42,9 @@ export type Database = {
     };
     Views: Record<never, never>;
     Functions: {
+      reserve_learning_request:{Args:Record<string,never>;Returns:undefined};
+      save_learning_roadmap:{Args:{p_input:unknown;p_context:unknown;p_plan:unknown;p_mode:string;p_parent?:string};Returns:string};
+      update_learning_task:{Args:{p_id:string;p_status:string;p_notes:string;p_url:string|null;p_expected:string};Returns:undefined};
       reserve_company_rag:{Args:{p_url:string};Returns:string};
       retrieve_company_chunks:{Args:{p_session:string;p_model:string;p_vector:string;p_document?:string;p_limit?:number};Returns:unknown};
       reserve_github_request:{Args:Record<string,never>;Returns:undefined};
