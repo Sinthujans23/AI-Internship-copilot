@@ -1,4 +1,5 @@
 "use client";
+import { SaveApplication } from "./save-application";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { CareerRequirements } from "./career-requirements";
@@ -68,6 +69,7 @@ export function JobDiscovery({ initial, hasCv, initialWarning }: { initial: Care
         </details>
         <p className="whitespace-pre-line text-sm text-slate-600">{job.description.slice(0,350)}{job.description.length>350 ? "..." : ""}</p>
         <div className="flex flex-wrap gap-4"><a href={job.url} target="_blank" rel="noopener noreferrer" className="text-violet-700 underline">View listing on {job.source}</a>{job.application_url ? <a href={job.application_url} target="_blank" rel="noopener noreferrer" className="text-violet-700 underline">Official application</a> : <span className="text-xs text-slate-500">Direct employer application link unavailable; apply through the source listing.</span>}</div>
+        <SaveApplication company={job.company} role={job.title} url={job.application_url || job.url} text={job.description} />
       </article>)}
     </section>}
   </div>;

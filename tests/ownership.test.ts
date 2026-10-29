@@ -17,3 +17,14 @@ test("a foreign or missing scoped application cannot load a CV or invoke AI", as
   assert.deepEqual(tables, ["applications"]);
   assert.deepEqual(filters, [["id", "foreign-application"], ["user_id", "verified-user"]]);
 });
+
+test("application context uses the selected owned CV version", async () => {
+  const filters: [string,string][]=[];
+  const client={from(table:string){return {
+    select(){return this;},eq(key:string,value:string){if(table==="cvs")filters.push([key,value]);return this;},order(){return this;},limit(){return this;},
+    async maybeSingle(){return {data:table==="applications"?{id:"app",cv_id:"selected-version"}:{id:"selected-version"},error:null};},
+  };}} as unknown as SupabaseClient<Database>;
+  const result=await applicationContext(client,"owner","app");
+  assert.equal(result.cv.id,"selected-version");
+  assert.deepEqual(filters,[["user_id","owner"],["id","selected-version"]]);
+});

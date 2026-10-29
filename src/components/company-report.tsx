@@ -1,3 +1,4 @@
+import { SaveApplication } from "./save-application";
 import { CompanyRequirements, CompanyPreparation } from "./company-preparation";
 import Link from "next/link";
 import type { CompanyReport } from "@/lib/company/schema";
@@ -9,7 +10,7 @@ function Evidence({ fact, report }: { fact: { source_index: number; quote: strin
   const source = report.sources[fact.source_index];
   return <details className="mt-1 text-sm text-slate-600"><summary>Source evidence</summary><blockquote className="my-2 border-l-2 border-violet-200 pl-3">{fact.quote}</blockquote>{source && <a href={source.url} target="_blank" rel="noreferrer" className="break-all text-violet-700 underline">{source.title}</a>}</details>;
 }
-export function CompanyReportCard({ report, onDelete }: { report: CompanyReport; onDelete: () => void }) {
+export function CompanyReportCard({ report, onDelete }: { report: CompanyReport; onDelete?: () => void }) {
   return <article className="space-y-5 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
     <header className="flex flex-wrap items-start justify-between gap-4"><div className="min-w-0 flex-1"><h2 className="break-words text-xl font-bold">{report.company_label}</h2><a href={report.source_url} target="_blank" rel="noreferrer" className="break-all text-sm text-violet-700 underline">Open employer page</a><p className="mt-2 text-sm text-slate-500">CV: {report.cv_name} Â· {new Date(report.created_at).toLocaleString("en-GB", { timeZone: "Asia/Colombo" })}</p></div><div className="text-right"><p className="text-3xl font-bold text-violet-800">{report.rating_out_of_ten === null ? "Unknown" : `${report.rating_out_of_ten.toFixed(1)}/10`}</p><p className="text-sm text-slate-500">{report.match ? `${report.match.score}% skill similarity` : "No score without evidence"}</p></div></header>
     <p className="text-sm text-slate-600">Alignment estimate from published technology signals, not an accuracy probability or hiring guarantee. {report.facts.scope === "job_post" ? "Source classified as a job posting." : "A role-specific opening has not been verified."}</p>
@@ -34,8 +35,9 @@ export function CompanyReportCard({ report, onDelete }: { report: CompanyReport;
     <details className="rounded border border-slate-200 p-4"><summary className="font-semibold">Features to add to your existing projects</summary><div className="mt-4 space-y-3">{report.coaching.project_upgrades?.length ? report.coaching.project_upgrades.map((upgrade, index) => <div key={index} className="space-y-2 rounded bg-slate-50 p-3"><blockquote className="text-sm text-slate-500">Existing project evidence: {upgrade.project_quote}</blockquote><h3 className="font-semibold">{upgrade.suggested_feature}</h3><p>{upgrade.why_for_company}</p><ol className="list-decimal space-y-1 pl-5">{upgrade.implementation_steps.map((step, stepIndex) => <li key={stepIndex}>{step}</li>)}</ol></div>) : <p>No project-specific upgrades were grounded in this CV.</p>}<p className="text-sm text-slate-600">Build and verify these features before claiming them on your CV or in an interview.</p></div></details>
     <details className="rounded border border-slate-200 p-4"><summary className="font-semibold">Similar companies to research â€” unverified leads</summary><ul className="mt-4 space-y-3">{report.coaching.similar_company_leads.map((lead, index) => <li key={index} className="rounded bg-slate-50 p-3"><b>{lead.name}</b><p>{lead.reason_to_research}</p><p className="text-sm text-slate-600">Verify: {lead.what_to_verify}</p></li>)}</ul><p className="mt-3 text-sm text-slate-600">These names are AI research leads, not a verified shortlist or proof of current openings. Add their official links above to evaluate them.</p></details>
     <CompanyPreparation report={report} />
+    {report.facts.scope === "job_post" && report.facts.role && <SaveApplication company={report.company_label} role={report.facts.role.value} url={report.source_url} cvId={report.cv_id} reportId={report.id} />}
     <Link href={`/profile/pdf?cv_id=${encodeURIComponent(report.cv_id)}&report_id=${encodeURIComponent(report.id)}`} className="inline-block rounded bg-violet-700 px-4 py-2 text-white">Open source CV PDF editor with these suggestions</Link>
-    <footer className="flex flex-wrap justify-between gap-3 text-sm"><span className="text-slate-500">Re-run after changing your CV/preferences. Up to three public pages were checked.</span><button onClick={onDelete} className="text-red-700 underline">Delete saved report</button></footer>
+    <footer className="flex flex-wrap justify-between gap-3 text-sm"><span className="text-slate-500">Re-run after changing your CV/preferences. Up to three public pages were checked.</span>{onDelete && <button onClick={onDelete} className="text-red-700 underline">Delete saved report</button>}</footer>
   </article>;
 }
 

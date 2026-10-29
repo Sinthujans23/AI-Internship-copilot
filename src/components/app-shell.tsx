@@ -9,6 +9,7 @@ export function AppShell({ children, email }: { children: React.ReactNode; email
           <Link href="/profile" className="text-lg font-bold text-violet-700">AI Internship Copilot</Link>
           <div className="flex flex-wrap items-center gap-4">
             <Link href="/profile" className="text-violet-700 underline">CV profile</Link>
+            <Link href="/applications" className="text-violet-700 underline">Applications</Link>
             <Link href="/jobs" className="text-violet-700 underline">Find jobs</Link>
             <Link href="/companies" className="text-violet-700 underline">Company shortlist</Link>
             <Link href="/github" className="text-violet-700 underline">GitHub intelligence</Link>

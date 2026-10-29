@@ -268,3 +268,6 @@ See [CV Analyzer v2 setup, rubric, security, limitations and test checklist](doc
 ## Hybrid semantic job recommendations
 
 Find Jobs now combines required/preferred skill coverage, FastAPI embeddings and saved career preferences, with explanations and owned match snapshots. See [setup, migration, sources, scoring and tests](docs/HYBRID_JOB_MATCHING.md). Existing projects must run `supabase/migrations/20261028010000_hybrid_job_matching.sql` before using the upgraded search.
+
+### Restored application tracker
+See [Application Tracker](docs/APPLICATION_TRACKER.md) for migration, Kanban, integrations and testing instructions.

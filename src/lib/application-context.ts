@@ -7,7 +7,9 @@ export async function applicationContext(supabase: SupabaseClient<Database>, use
   const application = await supabase.from("applications").select("*").eq("id", applicationId).eq("user_id", userId).maybeSingle();
   if (application.error) throw new AppError("Could not load application. Check database migrations.");
   if (!application.data) throw new AppError("Application not found.", 404);
-  const cv = await supabase.from("cvs").select("*").eq("user_id", userId).order("created_at", { ascending: false }).limit(1).maybeSingle();
+  let cvQuery = supabase.from("cvs").select("*").eq("user_id", userId);
+  if (application.data.cv_id) cvQuery = cvQuery.eq("id", application.data.cv_id);
+  const cv = await cvQuery.order("created_at", { ascending: false }).limit(1).maybeSingle();
   if (cv.error) throw new AppError("Could not load your CV. Check database migrations.");
   if (!cv.data) throw new AppError("Upload a CV on the profile page first.", 422);
   return { application: application.data, cv: cv.data };

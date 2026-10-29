@@ -82,3 +82,10 @@ The app now distinguishes invalid API keys, model access, quota exhaustion, rate
 - Anonymous GET/POST /api/learning returned 401 on the production build.
 - Live structured AI generation with a synthetic profile returned a valid one-week roadmap with two tasks totalling 102 minutes for a two-hour budget. No personal CV data was sent.
 - Hosted migration and signed-in end-to-end acceptance remain manual. See docs/LEARNING_ROADMAP.md.
+
+## 2026-10-29 � restored application tracker
+
+- Full TypeScript suite: 84 tests passed, including selected CV-version ownership and tracker URL validation.
+- Local isolated PostgreSQL: create, edit, stage transitions, history retrieval, duplicate rejection, foreign CV/report rejection, cross-user reads/updates/deletes, anonymous access denial, deletion cascade and migration rerun passed.
+- Typecheck, ESLint and production build passed. Build encoding issue corrected to UTF-8.
+- Hosted migration and signed-in drag/drop, keyboard/mobile workflow remain manual checks. See APPLICATION_TRACKER.md.
