@@ -97,3 +97,10 @@ The app now distinguishes invalid API keys, model access, quota exhaustion, rate
 - Isolated PostgreSQL tests passed for accept/reject persistence, immutable results, foreign ownership rejection, new CV lineage, original preservation, migration reruns and source/job deletion behavior. A foreign-key trigger ordering issue found by the added deletion test was fixed and rechecked.
 - Typecheck, lint and production build passed.
 - Hosted migration and live OpenRouter/signed-in browser export workflow remain manual. See CV_TAILORING.md, including conservative extractive wording limits.
+
+## 2026-10-29 — career readiness analytics
+
+- 93 TypeScript tests passed, including metric arithmetic, selected role gaps, owner scoping of both initial/dependent queries, private CV text exclusion, empty/partial-data states and rendered loading accessibility.
+- Typecheck, ESLint and production build passed.
+- No schema changes, write operations or new AI calls. Existing RLS and server-side page authentication are reused.
+- Mock interview scores are explicitly unavailable because no scored session data exists. Signed-in visual checks at mobile/tablet/desktop widths remain manual; see CAREER_ANALYTICS.md.

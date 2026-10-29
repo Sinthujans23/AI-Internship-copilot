@@ -8,6 +8,7 @@ export function AppShell({ children, email }: { children: React.ReactNode; email
         <nav className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-4 px-4 py-4">
           <Link href="/profile" className="text-lg font-bold text-violet-700">AI Internship Copilot</Link>
           <div className="flex flex-wrap items-center gap-4">
+            <Link href="/dashboard" className="text-violet-700 underline">Career readiness</Link>
             <Link href="/profile" className="text-violet-700 underline">CV profile</Link>
             <Link href="/tailoring" className="text-violet-700 underline">Tailor CV</Link>
             <Link href="/applications" className="text-violet-700 underline">Applications</Link>

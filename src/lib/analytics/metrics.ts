@@ -1,0 +1,6 @@
+﻿import {applicationStatuses} from "../applications";
+export function progress(tasks:{status:string}[]){const completed=tasks.filter(t=>t.status==="Completed").length;return {total:tasks.length,completed,in_progress:tasks.filter(t=>t.status==="In Progress").length,percent:tasks.length?Math.round(completed/tasks.length*100):0};}
+export function applicationTotals(counts:(number|null)[]){return {total:counts.some(c=>c===null)?null:counts.reduce<number>((sum,c)=>sum+(c||0),0),stages:applicationStatuses.map((stage,i)=>({stage,count:counts[i]??null}))};}
+export function recentActivity(events:{label:string;at:string;href:string}[]){return events.filter(e=>Number.isFinite(Date.parse(e.at))).sort((a,b)=>Date.parse(b.at)-Date.parse(a.at)).slice(0,15);}
+export function gaps(jobs:{role:string;required:string[];preferred:string[]}[],role:string){const selected=jobs.filter(j=>!role||j.role===role);const required=[...new Set(selected.flatMap(j=>j.required))];return {required,preferred:[...new Set(selected.flatMap(j=>j.preferred))].filter(s=>!required.includes(s))};}
+export function freshness(at:string,now=Date.now()){const age=now-Date.parse(at);return !Number.isFinite(age)?"Timestamp unavailable":age>7*86400000?"Older than 7 days; refresh the source feature":"Recorded within 7 days; not live data";}

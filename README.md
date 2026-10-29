@@ -274,3 +274,6 @@ See [Application Tracker](docs/APPLICATION_TRACKER.md) for migration, Kanban, in
 
 ### Job-specific CV tailoring
 See [CV tailoring](docs/CV_TAILORING.md) for setup, conservative evidence checks, individual review and PDF version export.
+
+### Career readiness analytics
+See [Career analytics](docs/CAREER_ANALYTICS.md) for widget sources, freshness, privacy and testing. No new SQL or AI calls are required.

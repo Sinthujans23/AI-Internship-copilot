@@ -1,0 +1,2 @@
+import React from "react";
+﻿export default function Loading(){return <div role="status" aria-live="polite" aria-busy="true" className="space-y-4"><h1 className="text-3xl font-bold">Career readiness</h1><p>Loading your saved CV, learning and application metrics...</p><div className="grid gap-4 sm:grid-cols-2">{[1,2,3,4].map(i=><div key={i} aria-hidden="true" className="h-40 animate-pulse rounded-xl bg-slate-200"/>)}</div></div>;}
