@@ -94,3 +94,13 @@ Hosted authenticated browser testing requires applying the migration in your Sup
 ## Requirements-first verification (hybrid-2)
 
 Save requirements, wait for the automatic search, and verify the displayed role/location/work mode/salary match your saved values. A high CV score must not promote a known location/work-mode mismatch over compatible jobs. Use the mismatch toggle only to inspect alternatives. Missing salary or broad remote location stays Needs verification. Cached v1 snapshots remain readable in history, while the new context version forces a fresh search; no SQL migration is required. The feeds are a limited public pool, not a comprehensive live search of every platform. Source mistakes cannot be independently corrected without checking the linked employer listing.
+
+## Expanded public sources (Step 28)
+
+Sri Lankan discovery now includes the documented ITPro internship RSS feed (https://itpro.lk/rss/all/internship), with company, job title, location, descriptions and source links. ITPro explicitly permits custom dashboards: https://itpro.lk/rss/. No additional key is needed. Employer application URLs and salary remain unknown when not supplied; RSS source links are not labelled official employer links. Remote location alone does not imply worldwide eligibility. XML entity declarations and off-domain links are rejected; response sizes and fetch timeouts are bounded.
+
+Public SmartRecruiters boards for Bosch India and LinkedIn India are added alongside IFS. LinkedIn here means vacancies at the LinkedIn company, NOT access to jobs published by all employers on linkedin.com. LinkedIn prohibits automated website scraping (https://www.linkedin.com/help/linkedin/answer/a1341543). Broad LinkedIn discovery still needs an authorized integration; this release does not implement one or claim whole-web coverage. Public Posting API reference: https://developers.smartrecruiters.com/docs/endpoints.
+
+Sources are isolated with partial-failure warnings and six-hour public-only caches. The personal search context changes to invalidate the old single-employer result cache. No migration or credential change is required. Existing saved preferences still control ranking/hiding; more sources do not guarantee multiple matching companies for every filter. Cards now show a distinct company count. The RSS feed is a bounded recent snapshot, not an exhaustive listing archive.
+
+Manual test: open Find Jobs and save your requirements. Verify ITPro attribution, source links, company counts and requirement explanations. Confirm restrictive locations can still return few/no matches. Use the existing mismatch toggle to inspect excluded alternatives without changing their relevance labels.

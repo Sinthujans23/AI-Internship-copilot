@@ -18,7 +18,7 @@ export async function POST() {
     const {data: saved,error:prefError}=await supabase.from("career_preferences").select("preferences").eq("user_id",user.id).maybeSingle();
     if(prefError) throw new AppError("Could not load saved career preferences.",503);
     const preferences=preferencesSchema.parse(saved?.preferences || defaultPreferences);
-    const hash=createHash("sha256").update(JSON.stringify([MATCH_VERSION,cv.id,cv.extracted_text,cv.skills,preferences])).digest("hex");
+    const hash=createHash("sha256").update(JSON.stringify([MATCH_VERSION,"public-jobs-v3",cv.id,cv.extracted_text,cv.skills,preferences])).digest("hex");
     const {data:cached,error:cacheError}=await supabase.from("job_match_runs").select("result").eq("user_id",user.id).eq("context_hash",hash).gte("created_at",new Date(Date.now()-3600000).toISOString()).not("result","is",null).order("created_at",{ascending:false}).limit(1).maybeSingle();
     if(cacheError) throw new AppError("Run the hybrid job matching SQL migration in Supabase, then retry.",503);
     const parsedCache=hybridResponseSchema.safeParse(cached?.result);

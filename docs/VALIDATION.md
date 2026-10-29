@@ -137,3 +137,8 @@ Remaining release gates: hosted security migration and Supabase Auth/RLS/private
 
 Manual acceptance: save a target role, two preferred locations, work mode and salary range in Find Jobs. Confirm a refreshed search, per-requirement explanations, unknown salary/location labels, and the optional mismatch toggle. Confirm broad country listings do not claim to verify a specific city. Existing CV and company workflows are covered by the full regression suite.
 Production build passed, including TypeScript validation and generation of all 23 static pages. An accidentally duplicated build was stopped after a shared webpack cache warning; the retained build completed successfully.
+
+## Step 28: Multiple-company public job discovery
+
+108 TypeScript tests passed; ESLint passed. Four new tests cover multi-company RSS metadata, location uncertainty, unsafe/malformed feeds and employer fetch allowlisting. Live read-only smoke test: ITPro returned 25 internship listings from 23 distinct companies; LinkedIn employer India and Bosch India returned zero internship candidates in the bounded snapshot. These are feed counts, not counts guaranteed to match a particular CV/preferences. No hosted SQL/data was changed. No comprehensive LinkedIn platform search was implemented. Manual authenticated browser verification remains outstanding.
+Production build passed, including type validation and generation of all 23 static pages.
