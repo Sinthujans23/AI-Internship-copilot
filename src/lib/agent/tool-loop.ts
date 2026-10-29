@@ -29,6 +29,7 @@ export async function runToolLoop(nextTurn: NextTurn, execute: (name: ToolName) 
     messages.push(message);
     if (message.tool_calls?.length) {
       for (const call of message.tool_calls) {
+        if (call.type !== "function") throw new AgentLoopError("Unsupported tool call type.");
         const name = call.function.name as ToolName;
         if (!available.some(spec => spec.name === name) || name in outputs) throw new AgentLoopError("The AI requested an unavailable tool. Please retry.");
         let args: unknown;

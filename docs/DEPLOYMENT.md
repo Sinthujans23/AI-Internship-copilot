@@ -1,65 +1,39 @@
-# Deploy to Render and Vercel
+﻿# Deploy, monitor and roll back
 
-The repository is ready to deploy. No service has been published and no account settings have been changed automatically.
+Deployment configuration is prepared; no service was published and no hosted Supabase setting was changed by this upgrade. Use staging first. Have the project owner confirm target Vercel/Render projects and production changes; enter secrets directly in their dashboards, never in chat.
 
-## 1. Supabase
+## 1. Database and backups
 
-1. Create or choose a project. Run the entire `supabase/setup.sql` in SQL Editor. It creates/upgrades `applications`, `cvs`, ownership RLS, and a private `cvs` PDF bucket. Do not run the old `20261020000000_initial_schema.sql` after setup; it belongs to the earlier prototype. For a CLI migration workflow, baseline that historical migration in an existing project first; the supported hand-setup path is `setup.sql`.
-2. Enable email/password signups. For local work set Site URL to `http://localhost:3000` and allow `http://localhost:3000/api/auth/callback` as a redirect. Confirm emails using the same browser and computer as signup, with the local server running. Resend confirmation from the app if a link expired.
-3. After deploying Vercel, change Site URL to the production HTTPS origin and add `https://YOUR_DOMAIN/api/auth/callback` to redirect URLs. Keep the localhost callback if you still develop locally. Add preview callbacks individually if you test preview environments.
-4. Copy the project URL and public publishable/anon key from Connect. Our existing env variable is named `NEXT_PUBLIC_SUPABASE_ANON_KEY`; it also accepts a publishable key. Never use a service-role/secret key there.
+Back up the production database and verify storage-object backup/restore coverage. Apply missing supported migrations in order. Existing installations need `supabase/migrations/20261030000000_production_security.sql`; new projects use `supabase/setup.sql`. Do not reapply the obsolete prototype migration. The new path constraint is NOT VALID to preserve existing rows; investigate mismatched legacy paths before validating it. Run the hosted checklist in SECURITY.md.
 
-## 2. Push your repository
+## 2. Render private service
 
-Create a private or public Git repository on your chosen Git host and push the local commits. `.env.local`, `matching-service/.env`, caches, dependencies, and virtual environments are ignored. Review staged files before pushing. No remote or push is configured automatically.
+Use `render.yaml`: Python service, root `matching-service`, `pip install -r requirements.txt`, `uvicorn main:app --host 0.0.0.0 --port $PORT --no-access-log`, health path `/health`. `.python-version` selects Python 3.13. Use the patched requirements file, not a stale build cache. Configure AI_PROVIDER, its selected provider key/embedding model, MATCH_THRESHOLD and a long random MATCHING_SERVICE_API_KEY. The Next.js copy must match. No CORS origins are needed; all requests are server-to-server. Docs/OpenAPI routes are disabled.
 
-## 3. Render: FastAPI
+Verify `/health` returns 200 and unauthenticated `/match`, `/rank`, `/embed`, `/pdf/edit` requests fail. A 200 health response proves only process liveness, not AI billing or database access. See the official [FastAPI deployment guide](https://render.com/docs/deploy-fastapi) and [health-check behavior](https://render.com/docs/health-checks).
 
-Create a Python Web Service from the repo (or use the root `render.yaml` blueprint).
+## 3. Vercel
 
-| Setting | Value |
-| --- | --- |
-| Root directory | `matching-service` |
-| Build command | `pip install -r requirements.txt` |
-| Start command | `uvicorn main:app --host 0.0.0.0 --port $PORT` |
-| Health check | `/health` |
-| Python | 3.13; root `.python-version` selects its latest patch |
+Import the repository root using Next.js and Node 22. `vercel.json` uses `npm ci` and `npm run build`; production output is `.next`. Configure all required variables in SETUP.md and set MATCHING_SERVICE_URL to the Render HTTPS origin. Choose a model supporting structured output/tools and an embedding model available to the service. New public Supabase values require rebuilding.
 
-Set these env variables in Render:
+Route maxDuration values remain in source (up to 300 seconds for the agent). Verify your plan's enabled function duration/memory limits. PDF uploads are capped at 4 MiB with bounded multipart overhead; large files may need a future direct-upload design. Vercel documents a [4.5 MB request/response limit](https://vercel.com/docs/functions/limitations), so test representative PDFs in staging, including edited response size. Health is `/api/health`.
 
-- `OPENAI_API_KEY`: your API key with embedding access and billing enabled
-- `EMBEDDING_MODEL`: `text-embedding-3-small`
-- `MATCHING_SERVICE_API_KEY`: the same random shared key used in Next.js
-- `MATCH_THRESHOLD`: `0.65` initially; tune with representative CV/job examples
+## 4. Supabase production settings
 
-Deploy and visit `https://YOUR_SERVICE.onrender.com/health`; expect `{"status":"ok"}`. An unauthenticated POST to `/match` must return 401. This health check verifies server readiness, not your embedding key/billing. Copy the service HTTPS origin for Vercel. A sleeping/cold service may need warming before an agent run.
+Set Site URL to the production HTTPS origin and add its exact `/api/auth/callback` redirect. Configure SMTP/confirmation, auth rate limits, private storage and RLS. Add development/preview redirects deliberately, never a broad production wildcard. Use public anon/publishable keys in NEXT_PUBLIC variables only; service-role keys are not required. Inspect bucket/policy state in the actual dashboard; repository tests cannot certify it.
 
-These commands follow the [Render FastAPI guide](https://render.com/docs/deploy-fastapi); Python version selection follows [Render's version documentation](https://render.com/docs/python-version).
+## 5. Acceptance and monitoring
 
-## 4. Vercel: Next.js
+Run build/lint/unit/Python/SQL/browser suites. Then run authenticated E2E on staging with a dedicated account and manually check two-account ownership, real AI/schema support, PDF preview/export, public-source partial failures and quota/cache behavior. Set provider budgets. Configure uptime checks for both health endpoints and alerts for HTTP 5xx/429 spikes, latency, failed saves and sustained dependency outages. Structured app logs contain only event/status/duration; do not enable request-body capture.
 
-Import the same repo, choose the Next.js preset, repository root as Root Directory, and Node.js 22 or newer. Use `npm ci` and `npm run build`; leave the output directory at Next.js defaults. Production uses `.next`; local development uses `.next-dev`.
+No synthetic health call spends AI credits. Live paid smoke checks require a deliberately selected low-cost fixture and confirmation that billing is enabled. Schedule expired private-cache cleanup if strict retention is required.
 
-Set all six variables from the root `.env.example`:
+## Rollback
 
-1. `NEXT_PUBLIC_SUPABASE_URL`
-2. `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-3. `OPENAI_API_KEY`
-4. `OPENAI_MODEL=gpt-4o-mini` (or a model supporting strict structured output and function calls)
-5. `MATCHING_SERVICE_URL=https://YOUR_SERVICE.onrender.com`
-6. `MATCHING_SERVICE_API_KEY` (identical to Render)
+1. Stop/promote away from the failing release using the host's previous successful deployment. Roll back Vercel and Render to compatible known commits; record the commit and env-version identifiers beforehand.
+2. Retain additive database tables/columns/indexes. Do not drop user data to revert code. Previous code can ignore new objects. If a new constraint blocks legitimate legacy records, investigate first; a controlled forward migration is safer than destructive rollback.
+3. Restore provider/model/env settings only if known compatible; rotate compromised secrets instead of restoring them. Rebuild Next.js when public env settings change.
+4. Recheck liveness, authenticated login, owned read/write, PDF access and quotas. Restore backups only through an approved incident procedure; doing so can lose newer writes.
+5. Record cause, affected time window and any partial storage/database operations needing reconciliation.
 
-Deploy, add the production Supabase callback as above, and redeploy after changing public env values because Next.js bundles them at build time. Use Vercel's Fluid Compute / a function duration setting supporting the agent route's `maxDuration=300`. The API uses Node.js functions, not the Edge runtime.
-
-The app limits PDFs to 4 MB to fit below [Vercel's 4.5 MB function payload limit](https://vercel.com/docs/functions/limitations). The same documentation lists function-duration limits; check the limits enabled for your account. Deployment follows [Next.js on Vercel](https://vercel.com/docs/frameworks/full-stack/nextjs).
-
-## 5. Production acceptance test
-
-1. Signup/confirm/login from the deployed origin; ensure redirects stay on that origin.
-2. Add/change/delete an application and refresh to verify persistence.
-3. Upload a PDF, inspect text/skills, replace it, and verify private file ownership with another account.
-4. Analyze a job, save it, and run **Check CV match**.
-5. Run **Prepare my application**. Expect five tool names in stored results, a score, exactly three bullets, and an email. Refresh, copy drafts, review facts/placeholders, and verify no email is sent.
-6. Use a second account and attempt requests with the first account's application/CV IDs. Expect 404; personal data must not be returned. SQL Editor admin queries bypass RLS, so they do not prove end-user isolation.
-
-Live provider results, email delivery, hosting URLs, and billing access require your own accounts and keys. No live deployment or end-to-end authenticated test has been claimed by the offline checks.
+Deployment remains pending until project access, configured secrets and explicit production approval are available. Never represent local test success as a successful deployment.

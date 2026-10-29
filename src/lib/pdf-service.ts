@@ -7,7 +7,7 @@ export async function pdfService(action: "inspect" | "edit", input: unknown) {
   let response: Response;
   try {
     response = await fetch(`${url.replace(/\/$/, "")}/pdf/${action}`, {
-      method: "POST", headers: { "Content-Type": "application/json", "X-API-Key": key }, body: JSON.stringify(input), signal: AbortSignal.timeout(45000), cache: "no-store",
+      method: "POST", headers: { "Content-Type": "application/json", "X-API-Key": key }, body: JSON.stringify(input), signal: AbortSignal.timeout(45000), cache: "no-store", redirect: "error",
     });
   } catch { throw new AppError("The PDF service could not be reached. Start it with npm run dev:matching.", 503); }
   if (!response.ok) {

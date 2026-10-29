@@ -13,7 +13,7 @@ export async function matchCvToJob(cv: { skills: string[]; extracted_text: strin
     response = await fetch(`${url.replace(/\/$/, "")}/match`, {
       method: "POST", headers: { "Content-Type": "application/json", "X-API-Key": key },
       body: JSON.stringify({ cv_text: cv.extracted_text, cv_skills: cv.skills, job_skills: skills }),
-      signal: AbortSignal.timeout(50000), cache: "no-store",
+      signal: AbortSignal.timeout(50000), cache: "no-store", redirect: "error",
     });
   } catch { throw new AppError("Matching service could not be reached. Start FastAPI or check its URL.", 503); }
   if (!response.ok) throw new AppError(response.status === 429 ? "Embedding quota or rate limit reached. Try later." : "Matching failed. Check the matching service keys and logs.", response.status === 429 ? 429 : 502);

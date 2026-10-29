@@ -1,3 +1,4 @@
+import {boundedBody} from "@/lib/security/request";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { requireUser,apiError,AppError } from "@/lib/api";
@@ -22,7 +23,7 @@ const action=z.discriminatedUnion("action",[
  z.object({action:z.literal("recommend"),id:z.string().uuid()}),
 ]);
 export async function POST(request:Request){try{
- const {supabase,user}=await requireUser();const raw=await request.text();if(raw.length>8000)throw new AppError("Request too large.",413);
+ const {supabase,user}=await requireUser();const raw=new TextDecoder().decode(await boundedBody(request,8000));if(raw.length>8000)throw new AppError("Request too large.",413);
  const input=action.parse(JSON.parse(raw));
  if(input.action==="generate")return NextResponse.json(await generateRoadmap(supabase,user.id,input.input,input.parent_id),{headers});
  if(input.action==="recommend")return NextResponse.json(await nextSteps(supabase,user.id,input.id),{headers});

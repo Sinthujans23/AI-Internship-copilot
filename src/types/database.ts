@@ -44,6 +44,8 @@ export type Database = {
     };
     Views: Record<never, never>;
     Functions: {
+      reserve_paid_operation:{Args:{p_kind:string;p_hash:string};Returns:unknown};
+      finish_paid_operation:{Args:{p_id:string;p_result:unknown};Returns:undefined};
       reserve_tailoring_request:{Args:Record<string,never>;Returns:undefined};
       decide_tailoring_suggestion:{Args:{p_id:string;p_index:number;p_decision:string};Returns:undefined};
       reserve_learning_request:{Args:Record<string,never>;Returns:undefined};

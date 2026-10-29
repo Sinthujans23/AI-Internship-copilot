@@ -7,13 +7,21 @@ import math
 import httpx
 from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, Header, HTTPException
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
+from security import PrivateBodyLimit
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from matching import score_embeddings, cosine
 from pdf_routes import router as pdf_router
 
 load_dotenv()
-app = FastAPI(title="AI Internship Copilot Matching", version="1.0.0")
+app = FastAPI(title="AI Internship Copilot Matching", version="1.0.0", docs_url=None, redoc_url=None, openapi_url=None)
+app.add_middleware(PrivateBodyLimit)
+
+@app.exception_handler(RequestValidationError)
+async def invalid_request(_request, _error):
+    return JSONResponse({"detail": "Invalid request fields or size"}, status_code=422)
 
 
 class MatchInput(BaseModel):

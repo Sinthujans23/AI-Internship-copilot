@@ -1,3 +1,4 @@
+import {readJson} from "@/lib/security/request";
 import { NextResponse } from "next/server";
 import { requireUser, apiError, AppError } from "@/lib/api";
 import { defaultPreferences, preferencesSchema } from "@/lib/company/schema";
@@ -14,7 +15,7 @@ export async function GET() {
 export async function PUT(request: Request) {
   try {
     const { supabase, user } = await requireUser();
-    const preferences = preferencesSchema.parse(await request.json());
+    const preferences = preferencesSchema.parse(await readJson(request));
     const { error } = await supabase.from("career_preferences").upsert({ user_id: user.id, preferences, updated_at: new Date().toISOString() }, { onConflict: "user_id" });
     if (error) throw new AppError("Could not save preferences. Run the company research SQL migration.", 503);
     return NextResponse.json(preferences);

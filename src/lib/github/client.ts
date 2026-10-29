@@ -43,7 +43,7 @@ export async function repositoryEvidence(repo:Repository,fetcher:typeof fetch=fe
   const tasks=await Promise.allSettled([
     githubRequest(`${base}/languages`,fetcher), file(`${base}/readme`,fetcher), githubRequest(`${base}/contents`,fetcher),
   ]);
-  if(tasks[0].status==="fulfilled") {const parsed=z.record(z.number().nonnegative()).safeParse(tasks[0].value);if(parsed.success)languages=parsed.data;else warnings.push("Language data unavailable.");}
+  if(tasks[0].status==="fulfilled") {const parsed=z.record(z.string(),z.number().nonnegative()).safeParse(tasks[0].value);if(parsed.success)languages=parsed.data;else warnings.push("Language data unavailable.");}
   else warnings.push(tasks[0].reason instanceof GitHubError?tasks[0].reason.message:"Language data unavailable.");
   if(tasks[1].status==="fulfilled" && typeof tasks[1].value==="string")readme=tasks[1].value;
   else warnings.push("README missing, too large or unavailable. No README claims were inferred.");

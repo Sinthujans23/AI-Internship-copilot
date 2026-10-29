@@ -1,22 +1,15 @@
+import {apiError} from "@/lib/api";
+import {readJson} from "@/lib/security/request";
 ﻿import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
-import { applicationSchema, applicationUpdateSchema } from "@/lib/applications";
+import { applicationSchema, applicationUpdateSchema, applicationChanges } from "@/lib/applications";
 
 // Select only the Step 1 columns, including when upgrading the old schema.
 const columns = "id,user_id,company,role,status,job_text,job_analysis,match_score,match_result,agent_result,created_at,job_url,notes,application_date,interview_date,follow_up_date,cv_id,company_report_id";
 export const dynamic = "force-dynamic";
 
-function failure(error: unknown) {
-  if (error instanceof z.ZodError) {
-    return NextResponse.json({ error: error.issues[0]?.message || "Invalid input." }, { status: 400 });
-  }
-  if (error instanceof SyntaxError) {
-    return NextResponse.json({ error: "Send valid JSON." }, { status: 400 });
-  }
-  const message = error instanceof Error ? error.message : "Application service unavailable.";
-  return NextResponse.json({ error: message }, { status: message.includes("not configured") ? 503 : 500 });
-}
+const failure = apiError;
 
 export async function GET(request: Request) {
   try {
@@ -42,7 +35,7 @@ export async function POST(request: Request) {
     const supabase = await createClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) return NextResponse.json({ error: "Please log in." }, { status: 401 });
-    const input = applicationSchema.parse(await request.json());
+    const input = applicationSchema.parse(await readJson(request));
     // Never accept a user_id from the browser; use the verified user's ID.
     const { data, error } = await supabase.from("applications")
       .insert({ ...input, user_id: user.id }).select(columns).single();
@@ -56,8 +49,8 @@ export async function PATCH(request: Request) {
     const supabase = await createClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) return NextResponse.json({ error: "Please log in." }, { status: 401 });
-    const { id, ...input } = applicationUpdateSchema.parse(await request.json());
-    const { data, error } = await supabase.from("applications").update(input)
+    const { id, ...input } = applicationUpdateSchema.parse(await readJson(request));
+    const { data, error } = await supabase.from("applications").update(applicationChanges(input))
       .eq("id", id).eq("user_id", user.id).select(columns).maybeSingle();
     if (error) return databaseFailure(error);
     if (!data) return NextResponse.json({ error: "Application not found." }, { status: 404 });

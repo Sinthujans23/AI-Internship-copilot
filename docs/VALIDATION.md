@@ -104,3 +104,29 @@ The app now distinguishes invalid API keys, model access, quota exhaustion, rate
 - Typecheck, ESLint and production build passed.
 - No schema changes, write operations or new AI calls. Existing RLS and server-side page authentication are reused.
 - Mock interview scores are explicitly unavailable because no scored session data exists. Signed-in visual checks at mobile/tablet/desktop widths remain manual; see CAREER_ANALYTICS.md.
+
+## 2026-10-29 — production readiness upgrade (Step 26)
+
+Actual local results after fixes and dependency updates:
+
+| Validation | Result |
+| --- | --- |
+| TypeScript unit/regression/security suite | 99 passed |
+| Typecheck / ESLint / production build | Passed (final build checked before commit) |
+| Python unittest discovery | 17 passed, including PDF export and private-service guards |
+| pip check | No broken requirements |
+| npm audit | 0 vulnerabilities after dependency upgrades |
+| pip-audit -r matching-service/requirements.txt | No known vulnerabilities after FastAPI/Starlette upgrade |
+| PostgreSQL suites | All eight passed: CV v2, hybrid, GitHub, RAG, learning, tracker, tailoring, production security; migration reruns included |
+| Playwright desktop/mobile | 4 passed, 4 skipped (dedicated E2E_EMAIL/E2E_PASSWORD absent); skipped flows are authenticated tracker CRUD and CV upload/download/dashboard |
+| Client secret scan | 57 generated client files checked against 3 configured private values; no matches; values were not printed |
+| Offline labelled ranking | Mean Recall@3=1.000, NDCG@3=1.000 on three synthetic profiles |
+| Live semantic labelled ranking | Mean Recall@3=1.000, NDCG@3=1.000 on the same tiny synthetic dataset; not evidence of real-world ranking accuracy |
+| Live structured AI | One synthetic learning plan passed schema/workload checks: one week, two tasks, 100 minutes |
+| Live embedding sanity | 1536 dimensions; relevant cosine 0.727 versus unrelated 0.121 |
+| Public GitHub smoke | octocat public profile/repository and README read successfully; zero partial warnings |
+| Public job-source smoke | IFS Sri Lanka: 3 normalized listings/official links; IFS India: 0 current results; Jobicy: FAILED (overall source-check command exited 1) |
+
+Initial issues found and corrected: Supabase SSR/client type mismatch after patching; Zod v4 partial defaults resetting application status; SDK custom tool-call union validation; Starlette dependency advisories; new helper return typing. The raw `node scripts/evaluate-jobs.ts` invocation failed module resolution and was rerun successfully through tsx (now `npm run test:ranking`). A local semantic-service attempt could not reach the provider inside the sandbox; the verified temporary localhost server was restarted with outbound access and the full semantic evaluation then passed. Temporary test services were stopped.
+
+Remaining release gates: hosted security migration and Supabase Auth/RLS/private-bucket verification, dedicated-account E2E including two-account private file isolation, production Vercel/Render target approval/access, live staging acceptance, monitoring, retention and backup restoration. No hosted data was changed and no deployment was performed. Jobicy availability remains a partial external-source failure; do not describe that smoke check as fully passing. CI workflow was added but not run on GitHub in this session.

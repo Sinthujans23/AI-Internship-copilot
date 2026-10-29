@@ -10,7 +10,7 @@ export async function semanticJobs(cvText: string, jobs: HybridJob[]) {
     signal: AbortSignal.timeout(45000), cache:"no-store", redirect:"error",
   });
   if(!response.ok) throw new Error("Semantic service unavailable.");
-  const {scores}=z.object({scores:z.record(z.number().finite().min(0).max(1))}).parse(await response.json());
+  const {scores}=z.object({scores:z.record(z.string(),z.number().finite().min(0).max(1))}).parse(await response.json());
   if(Object.keys(scores).length!==jobs.length || jobs.some(j=>scores[j.id]===undefined)) throw new Error("Incomplete semantic results.");
   return scores;
 }

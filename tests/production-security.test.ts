@@ -1,0 +1,15 @@
+﻿import test from "node:test";
+import assert from "node:assert/strict";
+import {boundedBody,readJson,trustedMutation} from "../src/lib/security/request";
+import {paidOperation} from "../src/lib/security/paid-operation";
+import type {SupabaseClient} from "@supabase/supabase-js";
+import type {Database} from "../src/types/database";
+test("bounded reader rejects oversized JSON including absent content-length",async()=>{const r=new Request("https://example.com",{method:"POST",body:"x".repeat(20)});await assert.rejects(boundedBody(r,10),/too large/);assert.deepEqual(await readJson(new Request("https://example.com",{method:"POST",body:'{"ok":true}'})),{ok:true});await assert.rejects(readJson(new Request("https://example.com",{method:"POST",body:"invalid"})));});
+test("cross-origin mutations fail while same-origin and authenticated CLI remain possible",()=>{assert.equal(trustedMutation(new Request("https://example.com/api",{headers:{Origin:"https://attacker.invalid"}})),false);assert.equal(trustedMutation(new Request("https://example.com/api",{headers:{Origin:"https://example.com"}})),true);});
+test("cached operations never repeat work, and busy/limits fail before paid calls",async()=>{let called=0;const client={rpc:async()=>({data:{cached:true,result:{score:7}},error:null})} as unknown as SupabaseClient<Database>;assert.deepEqual(await paidOperation(client,"match",{},async()=>{called++;return {}; }),{score:7});assert.equal(called,0);for(const message of ["OPERATION_BUSY","RATE_LIMIT"]){const blocked={rpc:async()=>({error:{message}})} as unknown as SupabaseClient<Database>;await assert.rejects(paidOperation(blocked,"agent",{},async()=>{called++;}));}assert.equal(called,0);});
+import {isPublicSupabaseKey} from "../src/lib/supabase/config";
+import {applicationChanges} from "../src/lib/applications";
+test("public Supabase config rejects server secret and service-role keys",()=>{assert.equal(isPublicSupabaseKey("sb_secret_not-a-real-key"),false);const token=`header.${Buffer.from(JSON.stringify({role:"service_role"})).toString("base64url")}.signature`;assert.equal(isPublicSupabaseKey(token),false);assert.equal(isPublicSupabaseKey("sb_publishable_demo"),true);});
+test("editing a job or CV invalidates derived analysis without changing status",()=>{assert.equal(applicationChanges({job_text:"new description"}).job_analysis,null);assert.equal(applicationChanges({cv_id:null}).agent_result,null);assert.deepEqual(applicationChanges({status:"Interview"}),{status:"Interview"});});
+import {readForm} from "../src/lib/security/request";
+test("malformed multipart uploads return a client error",async()=>{await assert.rejects(readForm(new Request("https://example.com/api/cvs",{method:"POST",headers:{"Content-Type":"application/json"},body:'{}'})),e=>e instanceof Error&&'status' in e&&e.status===400);});

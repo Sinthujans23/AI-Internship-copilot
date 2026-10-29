@@ -1,3 +1,4 @@
+import {safeEvent} from "./security/logging";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
@@ -14,6 +15,7 @@ export async function requireUser() {
   return { supabase, user };
 }
 export function apiError(error: unknown) {
+  safeEvent("api_failure", error instanceof AppError ? error.status : error instanceof z.ZodError || error instanceof SyntaxError ? 400 : 500);
   if (error instanceof OpenAI.APIError) {
     const details = providerErrorDetails(error);
     return NextResponse.json({ error: details.message }, { status: details.status });

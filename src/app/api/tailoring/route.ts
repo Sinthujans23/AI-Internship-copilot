@@ -1,3 +1,4 @@
+import {readJson} from "@/lib/security/request";
 ﻿import {NextResponse} from "next/server";
 import {z} from "zod";
 import {requireUser,apiError,AppError} from "@/lib/api";
@@ -7,7 +8,7 @@ export const maxDuration=60;
 const headers={"Cache-Control":"private, no-store"};
 export async function GET(){try{const {supabase,user}=await requireUser();const r=await supabase.from("cv_tailoring").select("*").eq("user_id",user.id).order("created_at",{ascending:false}).limit(50);if(r.error)throw new AppError("Apply the CV tailoring migration to load sessions.");return NextResponse.json(r.data,{headers});}catch(e){return apiError(e);}}
 export async function POST(request:Request){try{
- const {supabase,user}=await requireUser();const input=z.object({cv_id:z.string().uuid(),application_id:z.string().uuid()}).parse(await request.json());
+ const {supabase,user}=await requireUser();const input=z.object({cv_id:z.string().uuid(),application_id:z.string().uuid()}).parse(await readJson(request));
  const cv=await supabase.from("cvs").select("*").eq("id",input.cv_id).eq("user_id",user.id).maybeSingle();
  const app=await supabase.from("applications").select("*").eq("id",input.application_id).eq("user_id",user.id).maybeSingle();
  if(!cv.data||!app.data)throw new AppError("CV or saved job not found.",404);
@@ -21,4 +22,4 @@ export async function POST(request:Request){try{
  const result:TailoringResult={section_order:[...new Set(raw.section_order)],relevant_quotes:raw.relevant_quotes.filter(q=>cv.data!.extracted_text.split(/\r?\n/).some(line=>line.trim()===q.trim())),...comparison(cv.data.extracted_text,source),suggestions:groundedSuggestions(raw,cv.data.extracted_text),source_text:source,source_url:sourceUrl,guidance:["Consider placing your most relevant existing projects before unrelated experience; keep dates and qualifications intact. Section reordering is advisory and must be done in your source document.","Use matching skill spellings only when your existing CV evidence supports them. Missing skills belong in a learning plan, never as new CV claims.","Suggestions are AI editorial advice, not verified experience. Exact quotes refer only to your supplied CV. Review context and meaning before approval.","This conservative editor shortens existing wording. It does not invent stronger verbs or expand unverified claims. Required/preferred detection is limited to explicit wording and recognized skills; missing requirements may remain unknown."]};
  const saved=await supabase.from("cv_tailoring").insert({...input,user_id:user.id,result}).select("*").single();if(saved.error)throw new AppError("Could not save tailoring session. Apply the migration.");return NextResponse.json(saved.data,{headers,status:201});
  }catch(e){return apiError(e);}}
-export async function PATCH(request:Request){try{const {supabase}=await requireUser();const input=z.object({id:z.string().uuid(),index:z.number().int().min(0).max(7),decision:z.enum(["accepted","rejected"])}).parse(await request.json());const r=await supabase.rpc("decide_tailoring_suggestion",{p_id:input.id,p_index:input.index,p_decision:input.decision});if(r.error)throw new AppError("Suggestion not found or decision could not be saved.",400);return NextResponse.json({ok:true},{headers});}catch(e){return apiError(e);}}
+export async function PATCH(request:Request){try{const {supabase}=await requireUser();const input=z.object({id:z.string().uuid(),index:z.number().int().min(0).max(7),decision:z.enum(["accepted","rejected"])}).parse(await readJson(request));const r=await supabase.rpc("decide_tailoring_suggestion",{p_id:input.id,p_index:input.index,p_decision:input.decision});if(r.error)throw new AppError("Suggestion not found or decision could not be saved.",400);return NextResponse.json({ok:true},{headers});}catch(e){return apiError(e);}}

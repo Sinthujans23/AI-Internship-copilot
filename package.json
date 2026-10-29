@@ -11,23 +11,28 @@
     "test": "tsx --test tests/*.test.ts",
     "setup:env": "node scripts/setup-env.mjs",
     "sql": "node scripts/build-sql.mjs",
-    "dev:matching": "node scripts/start-matching.mjs"
+    "dev:matching": "node scripts/start-matching.mjs",
+    "test:e2e": "playwright test",
+    "check:secrets": "node scripts/check-client-secrets.mjs",
+    "prebuild": "node scripts/check-public-env.mjs",
+    "test:ranking": "tsx scripts/evaluate-jobs.ts"
   },
   "dependencies": {
-    "@supabase/ssr": "^0.6.1",
-    "@supabase/supabase-js": "^2.49.1",
+    "@supabase/ssr": "^0.12.7",
+    "@supabase/supabase-js": "^2.118.0",
     "cheerio": "^1.2.0",
     "ipaddr.js": "^2.5.0",
     "lucide-react": "^0.468.0",
     "next": "^15.1.6",
-    "openai": "^4.77.0",
+    "openai": "^7.45.1",
     "pdf-parse": "^2.4.5",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "zod": "^3.24.1"
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.7",
+    "@playwright/test": "^1.64.1",
     "@tailwindcss/postcss": "^4.3.3",
     "@types/node": "^22.10.5",
     "@types/react": "^19.0.7",
@@ -40,5 +45,8 @@
   },
   "engines": {
     "node": ">=22"
+  },
+  "overrides": {
+    "postcss": "8.5.32"
   }
 }

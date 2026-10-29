@@ -1,3 +1,4 @@
+import {readJson} from "@/lib/security/request";
 ﻿import { NextResponse } from "next/server";
 import { z } from "zod";
 import { requireUser, apiError, AppError } from "@/lib/api";
@@ -5,10 +6,10 @@ import { requireUser, apiError, AppError } from "@/lib/api";
 export async function POST(request: Request) {
   try {
     const { supabase, user } = await requireUser();
-    const { id } = z.object({ id: z.string().uuid() }).parse(await request.json());
+    const { id } = z.object({ id: z.string().uuid() }).parse(await readJson(request));
     const { data: cv, error } = await supabase.from("cvs").select("file_path").eq("id", id).eq("user_id", user.id).maybeSingle();
     if (error) throw error;
-    if (!cv) throw new AppError("CV not found.", 404);
+    if (!cv || !cv.file_path.startsWith(`${user.id}/`)) throw new AppError("CV not found.", 404);
     const removed = await supabase.storage.from("cvs").remove([cv.file_path]);
     if (removed.error) throw removed.error;
     const deleted = await supabase.from("cvs").delete().eq("id", id).eq("user_id", user.id);

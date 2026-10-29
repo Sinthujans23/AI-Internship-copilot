@@ -1,3 +1,4 @@
+import {boundedBody} from "@/lib/security/request";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { requireUser,apiError,AppError } from "@/lib/api";
@@ -29,7 +30,7 @@ const action=z.discriminatedUnion("action",[
 ]);
 export async function POST(request:Request){
  try{
-  const {supabase,user}=await requireUser();const text=await request.text();if(text.length>4096)throw new AppError("Request too large.",413);
+  const {supabase,user}=await requireUser();const text=new TextDecoder().decode(await boundedBody(request,8000));if(text.length>4096)throw new AppError("Request too large.",413);
   const input=action.parse(JSON.parse(text));
   if(input.action==="approve"){await approveGithubSkill(supabase,user.id,input.analysis_id,input.cv_id,input.skill);return NextResponse.json({ok:true},{headers});}
   if(input.action==="revoke"){const {error}=await supabase.from("github_skill_approvals").delete().eq("id",input.id).eq("user_id",user.id);if(error)throw new AppError("Could not revoke approval.",503);return NextResponse.json({ok:true},{headers});}

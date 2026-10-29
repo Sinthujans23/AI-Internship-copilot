@@ -31,10 +31,15 @@ export const statusUpdateSchema = z.object({
   id: z.string().uuid(),
   status: z.enum(applicationStatuses),
 });
-export const applicationUpdateSchema = applicationSchema.partial().extend({id:z.string().uuid()});
+export const applicationUpdateSchema = applicationSchema.partial().extend({id:z.string().uuid(),status:z.enum(applicationStatuses).optional(),job_text:z.string().trim().max(20000).optional()});
 export function filterApplications(rows: ApplicationRow[], query: string, status: string) {
   const q = query.trim().toLowerCase();
   return rows.filter(row => (!status || row.status === status) && `${row.company} ${row.role} ${row.notes || ""}`.toLowerCase().includes(q));
 }
 export type ApplicationRow = Database["public"]["Tables"]["applications"]["Row"];
 export type TrackerFields = {job_url:string|null; notes:string; application_date:string|null; interview_date:string|null; follow_up_date:string|null; cv_id:string|null; company_report_id:string|null};
+
+// Changing source text or the selected CV invalidates derived application material.
+export function applicationChanges(input:Omit<z.infer<typeof applicationUpdateSchema>,"id">):Database["public"]["Tables"]["applications"]["Update"]{
+ return {...input,...("job_text" in input?{job_analysis:null,match_score:null,match_result:null,agent_result:null}:"cv_id" in input?{match_score:null,match_result:null,agent_result:null}:{})};
+}

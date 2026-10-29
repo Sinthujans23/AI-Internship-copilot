@@ -6,7 +6,7 @@ import { AppError } from "@/lib/api";
 import { providerErrorDetails } from "./provider-error";
 
 export function validateAIJson<T>(content: string, schema: z.ZodType<T>): T {
-  try { return schema.parse(JSON.parse(content)); }
+  try { if(content.length>200000)throw new Error("Oversized response");return schema.parse(JSON.parse(content)); }
   catch { throw new AppError("The AI returned invalid data. Please retry.", 502); }
 }
 

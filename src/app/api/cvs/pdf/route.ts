@@ -1,3 +1,4 @@
+import {readJson} from "@/lib/security/request";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { requireUser, apiError, AppError } from "@/lib/api";
@@ -23,7 +24,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const { supabase, user } = await requireUser();
-    const input = z.object({ cv_id: z.string().uuid(), edits: pdfEditsSchema }).parse(await request.json());
+    const input = z.object({ cv_id: z.string().uuid(), edits: pdfEditsSchema }).parse(await readJson(request));
     const { buffer } = await downloadOwnedCv(supabase, user.id, input.cv_id);
     const response = await pdfService("edit", { pdf_base64: Buffer.from(buffer).toString("base64"), edits: input.edits });
     const edited = await response.arrayBuffer();

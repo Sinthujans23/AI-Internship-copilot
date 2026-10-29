@@ -1,3 +1,4 @@
+import {readForm} from "@/lib/security/request";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { requireUser, apiError, AppError } from "@/lib/api";
@@ -17,7 +18,7 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const { supabase, user } = await requireUser();
-    const form = await request.formData();
+    const form = await readForm(request);
     const replacement = form.get("replace_id");
     const replaceId = replacement ? z.string().uuid().parse(replacement) : null;
     const old = replaceId ? await supabase.from("cvs").select("id,file_path").eq("id", replaceId).eq("user_id", user.id).maybeSingle() : null;

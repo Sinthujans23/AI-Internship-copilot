@@ -1,3 +1,4 @@
+import {readJson} from "@/lib/security/request";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { requireUser, apiError, AppError } from "@/lib/api";
@@ -17,7 +18,7 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const { supabase, user } = await requireUser();
-    const input = z.object({ url: z.string().trim().min(3).max(2000), preferences: preferencesSchema }).parse(await request.json());
+    const input = z.object({ url: z.string().trim().min(3).max(2000), preferences: preferencesSchema }).parse(await readJson(request));
     const ready = await supabase.from("company_reports").select("id").eq("user_id", user.id).limit(1);
     if (ready.error) throw new AppError("Run the company research SQL migration before starting analysis.", 503);
     const { data: cv, error } = await supabase.from("cvs").select("id,file_name,skills,extracted_text").eq("user_id", user.id).order("created_at", { ascending: false }).limit(1).maybeSingle();

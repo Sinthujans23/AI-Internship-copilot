@@ -37,7 +37,7 @@ export async function regionalJobs(country: "lk" | "in"): Promise<FeedJob[]> {
   const listing=z.object({content:z.array(z.unknown())}).parse(await json(`${base}?country=${country}&limit=100&destination=PUBLIC`));
   const rows=listing.content.flatMap(r=>{const p=smartRow.safeParse(r); return p.success && /intern|trainee|student/i.test(p.data.name)?[p.data]:[];}).slice(0,15);
   const details=await Promise.allSettled(rows.map(async r=> {
-    const d=z.object({applyUrl:z.string().optional(),jobAd:z.object({sections:z.record(z.object({title:z.string().optional(),text:z.string().optional()}))}).optional()}).parse(await json(`${base}/${r.id}`));
+    const d=z.object({applyUrl:z.string().optional(),jobAd:z.object({sections:z.record(z.string(),z.object({title:z.string().optional(),text:z.string().optional()}))}).optional()}).parse(await json(`${base}/${r.id}`));
     const description=Object.values(d.jobAd?.sections||{}).map(s=>`${s.title||""}\n${plainDescription(s.text||"")}`).join("\n").slice(0,18000);
     return {id:`SmartRecruiters:${r.id}`,title:r.name,company:r.company.name,location:r.location?.fullLocation||"",remote:r.location?.remote||false,work_mode:r.location?.hybrid?"Hybrid" as const:r.location?.remote?"Remote" as const:"Unknown" as const,url:`https://jobs.smartrecruiters.com/IFS1/${r.id}`,application_url:safeSourceUrl(d.applyUrl,"jobs.smartrecruiters.com")||safeSourceUrl(d.applyUrl,"www.smartrecruiters.com"),description,source:"IFS / SmartRecruiters",published:r.releasedDate||null,skills:skillsIn(description),fetched_at:new Date().toISOString()};
   }));

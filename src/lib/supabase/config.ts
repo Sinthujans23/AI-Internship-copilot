@@ -4,7 +4,7 @@ export const supabaseSetupMessage = "Supabase is not configured correctly. Copy 
 export function getSupabaseConfig() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim();
-  if (!url || !key) return null;
+  if (!url || !key || !isPublicSupabaseKey(key)) return null;
   if (!/^https?:\/\//i.test(url)) return null;
   try {
     const parsed = new URL(url);
@@ -14,4 +14,10 @@ export function getSupabaseConfig() {
     return null;
   }
   return { url, key };
+}
+
+export function isPublicSupabaseKey(key:string){
+ if(key.startsWith("sb_secret_"))return false;
+ try {const payload=JSON.parse(atob(key.split(".")[1].replace(/-/g,"+").replace(/_/g,"/")));if(payload.role==="service_role")return false;}catch{/* Publishable/opaque keys have no JWT payload. */}
+ return true;
 }
