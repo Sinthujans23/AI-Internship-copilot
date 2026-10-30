@@ -1,4 +1,4 @@
-﻿# AI Internship Copilot
+# AI Internship Copilot
 
 A student workspace for understanding CV evidence, finding relevant internships, preparing applications and tracking learning. It preserves original CVs, labels uncertain evidence, and never submits job applications or sends email automatically.
 
@@ -89,3 +89,5 @@ Feature guides: [CV review](docs/CV_ANALYZER_V2.md), [hybrid matching](docs/HYBR
 This project demonstrates enforcing ownership in both API queries and RLS, separating evidence from AI advice, validating structured model responses, building bounded tool loops, measuring ranking on labelled examples, preserving document versions, and distinguishing offline test results from production acceptance. Provider responses, user approvals and task completion each have different evidentiary value; the UI keeps those distinctions visible.
 
 Deployment has not been performed by this upgrade. Successful local checks do not certify a hosted project or guarantee factual AI output.
+
+AI features use the [shared Smart Router](docs/SMART_ROUTER.md): local tools need no LLM; compatible outputs share a structured call; dependent stages wait for verified evidence.

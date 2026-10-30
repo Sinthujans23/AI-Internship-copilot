@@ -6,8 +6,8 @@ import { fetchCompanySources,companyUrl } from "./website";
 import { chunkSources,retrievedSources,type RetrievedChunk,type RagSummary } from "./rag-core";
 import { researchCompany } from "./research";
 import type { CareerPreferences } from "./schema";
-import {runResearchAgent} from './research-agent';
-import {getOpenAI,aiModel,providerOptions} from '../services/openai';
+import {researchTools,type ResearchTrace} from './research-agent';
+import {runLocalStage} from '../ai/router';
 
 export const embeddingBatchSchema=z.object({model:z.string().min(1).max(200),dimensions:z.number().int().min(1).max(3072),vectors:z.array(z.array(z.number().finite()).min(1).max(3072)).min(1).max(64)}).superRefine((r,ctx)=>{
  if(r.vectors.some(v=>v.length!==r.dimensions||!v.some(n=>n!==0)))ctx.addIssue({code:z.ZodIssueCode.custom,message:"Invalid embedding dimensions or zero vector"});
@@ -49,17 +49,14 @@ export async function researchCompanyRag(client:SupabaseClient<Database>,userId:
   }
   return [...retrieved.values()].map(c=>({source_index:c.source_index,url:c.source_url,quote:c.text.slice(0,300)})).slice(0,27);
  };
- const agentStarted=Date.now();
- const agent=await runResearchAgent(async(messages,tools)=>{
-  if(Date.now()-agentStarted>30000)throw new Error('Agent time limit');
-  const response=await getOpenAI().chat.completions.create({model:aiModel(),...providerOptions(),messages,tools,tool_choice:'auto',max_tokens:350},{timeout:Math.max(1,Math.min(10000,30000-(Date.now()-agentStarted))),maxRetries:0});
-  const choice=response.choices[0];if(!choice||choice.finish_reason==='length')throw new Error('Incomplete agent turn');
-  return choice.message;
- },retrieve,preferences.target_role);
+ // All three topics are required. Choosing their order needs no LLM.
+ await runLocalStage('company_retrieval',async()=>{
+  for(let i=0;i<queries.length;i++)await retrieve(i);
+ });
+ const agent:ResearchTrace={mode:'smart_router',tools:[...researchTools]};
  const selected=[...retrieved.values()];
  const rag:RagSummary={version:1,session_id:session,model:embedded.model,dimensions:embedded.dimensions,indexed_chunks:chunks.length,retrieved_chunks:selected,documents:docs.map(d=>({id:d.id,url:d.source_url,retrieved_at:d.retrieved_at})),required_skills:[],preferred_skills:[],company_technologies:[],missing_required:[],missing_preferred:[]};
  const report=await researchCompany(root,preferences,cv,{sources:retrievedSources(sources,selected),rag});
  report.rag!.agent=agent;
- if(agent.mode==='fallback')report.warnings.push('Research agent unavailable or returned invalid tool calls; the standard evidence retrieval completed instead.');
  return report;
 }

@@ -1,3 +1,5 @@
+Current architecture: Step 32 supersedes the tool-calling orchestration below with the [Smart Router](SMART_ROUTER.md). Mandatory searches run locally with zero LLM calls; fact extraction and combined coaching remain separate validated stages.
+
 # Company Research Agent
 
 The existing Company Shortlist POST route now uses a bounded tool-calling agent to choose the order of three evidence searches: `find_requirements`, `find_application_details`, and `find_company_technologies`. Website extraction and indexing still happen before the loop. All topics must be covered, so this first version adapts retrieval order, not the scope of a web crawl. It does not browse arbitrary sites or invent queries/requirements.

@@ -1,4 +1,4 @@
-﻿# Architecture
+# Architecture
 
 The browser uses Supabase public credentials only for Auth/session handling. Workspace pages call `requirePageUser`; APIs verify `auth.getUser()` and scope queries by the authenticated ID. RLS independently protects rows. New middleware coverage includes GitHub, Learning, Tailoring and all API routes.
 
@@ -28,3 +28,5 @@ Independent analytics reads run in parallel with bounded snapshots and exact hea
 Provider calls have explicit deadlines and no automatic billable retries. Legacy analyze/match/agent endpoints use a shared Postgres quota and execution lease; identical successful inputs can reuse results for 15 minutes. Other features retain their feature-specific quotas/caches. This is not an exactly-once billing guarantee if a process crashes after a provider completes.
 
 The private Python service permits no browser CORS origins, requires a shared key before parsing non-health requests, bounds bytes and suppresses input echoes in validation errors. CORS is not authentication; the shared key must remain server-side.
+
+See [Smart Router](SMART_ROUTER.md) for current feature routing, compatible outputs and generation call budgets.

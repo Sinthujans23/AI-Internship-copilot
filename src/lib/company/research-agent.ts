@@ -4,7 +4,7 @@ import type { ChatCompletionMessageParam, ChatCompletionTool } from 'openai/reso
 
 export const researchTools=['find_requirements','find_application_details','find_company_technologies'] as const;
 export type ResearchTool=typeof researchTools[number];
-export type ResearchTrace={mode:'agent'|'fallback';tools:ResearchTool[]};
+export type ResearchTrace={mode:'agent'|'fallback'|'smart_router';tools:ResearchTool[]};
 // No IDs, URLs or SQL are accepted from the model. All retrieval uses the authenticated snapshot.
 export async function runResearchAgent(next:NextTurn,retrieve:(topic:number)=>Promise<unknown>,role:string):Promise<ResearchTrace>{
  const completed=new Set<ResearchTool>();const trace:ResearchTool[]=[];let fallback=false;

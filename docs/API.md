@@ -1,4 +1,4 @@
-﻿# API reference
+# API reference
 
 All private endpoints require the Supabase session cookie. There is no browser-accessible service-role credential. Inputs use Zod, owned IDs and bounded bodies. Invalid input returns 400/422; unauthenticated requests 401; missing/foreign resources generally 404; quotas 429; duplicate/in-flight operations 409; unavailable dependencies 502/503/504. Errors contain safe messages, not provider bodies or credentials.
 
@@ -9,7 +9,7 @@ All private endpoints require the Supabase session cookie. There is no browser-a
 | /api/applications | GET POST PATCH DELETE | List/create/edit; `{id,status}` remains compatible; `?history=id` events; `?id=id` delete |
 | /api/analyze-job, /api/analyze | POST | `{job_text}` structured requirements; shared paid-operation quota/cache |
 | /api/match | POST | `{application_id}` owned CV/job comparison |
-| /api/agent | POST | `{application_id}` bounded preparation tool loop; never sends mail |
+| /api/agent | POST | `{application_id}` smart-routed preparation with combined bullets/email generation; never sends mail |
 | /api/cvs | GET POST | Owned versions; multipart PDF up to 4 MiB, optional tailoring_id |
 | /api/cvs/delete | POST | `{id}` explicit owned-file/version deletion |
 | /api/cvs/download | GET | `?cv_id=id` authenticated private PDF download |
