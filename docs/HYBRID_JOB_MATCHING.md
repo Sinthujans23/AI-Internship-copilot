@@ -104,3 +104,13 @@ Public SmartRecruiters boards for Bosch India and LinkedIn India are added along
 Sources are isolated with partial-failure warnings and six-hour public-only caches. The personal search context changes to invalidate the old single-employer result cache. No migration or credential change is required. Existing saved preferences still control ranking/hiding; more sources do not guarantee multiple matching companies for every filter. Cards now show a distinct company count. The RSS feed is a bounded recent snapshot, not an exhaustive listing archive.
 
 Manual test: open Find Jobs and save your requirements. Verify ITPro attribution, source links, company counts and requirement explanations. Confirm restrictive locations can still return few/no matches. Use the existing mismatch toggle to inspect excluded alternatives without changing their relevance labels.
+
+## Himalayas public API (Step 29)
+
+Find Jobs also connects server-side to https://himalayas.app/jobs/api/search with q=intern and separate country=LK, country=IN and worldwide=true searches. Each query reads at most two 20-result pages and caches public results for six hours. It never sends CV text to the job provider. Overlapping results are deduplicated before matching. Existing title checks discard ordinary mentions of internships in senior-job descriptions. Shared public API throttling causes a source warning while other feeds remain available.
+
+No API key or new SQL is required. API reference and display terms: https://himalayas.app/docs/remote-jobs-api. The supplied applicationLink is preserved with attribution as the card source/apply destination; it is not labelled a direct employer link. Expired entries are removed, including on personal-cache reads. Country restrictions, timezone restrictions and salary periods are retained; absent locations stay unknown, while an explicitly empty country list means worldwide according to the provider. Eligibility still needs employer verification. This is a bounded snapshot, not exhaustive platform coverage.
+
+Remotive was investigated but not integrated: its public API terms restrict signup-gated listings, which require further review for this authenticated application (https://github.com/remotive-com/remote-jobs-api). No private API credentials were added.
+
+Test by saving Remote preferences and a country or role in Find Jobs. Check Himalayas source attribution, expiry/unknown fields, and existing requirements-based ranking. Very restrictive preferences may still produce no results.

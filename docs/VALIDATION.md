@@ -142,3 +142,7 @@ Production build passed, including TypeScript validation and generation of all 2
 
 108 TypeScript tests passed; ESLint passed. Four new tests cover multi-company RSS metadata, location uncertainty, unsafe/malformed feeds and employer fetch allowlisting. Live read-only smoke test: ITPro returned 25 internship listings from 23 distinct companies; LinkedIn employer India and Bosch India returned zero internship candidates in the bounded snapshot. These are feed counts, not counts guaranteed to match a particular CV/preferences. No hosted SQL/data was changed. No comprehensive LinkedIn platform search was implemented. Manual authenticated browser verification remains outstanding.
 Production build passed, including type validation and generation of all 23 static pages.
+
+## Step 29: Himalayas API connection
+
+110 TypeScript tests, ESLint and production build passed. New tests verify country/unknown/worldwide semantics, salary periods, source application-link preservation, unsafe URLs, expired jobs and invalid/empty provider responses. Live Sri Lanka filtered request returned HTTP 200 with 20 normalized records across 17 companies; these are pre-title/pre-preference filter counts, not promised recommendations. An initial multi-region live smoke failed with a network error; the bounded single-country retry passed. India/worldwide and second-page live responses were not independently confirmed. No hosted SQL or credentials changed; authenticated UI acceptance remains manual.

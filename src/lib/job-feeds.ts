@@ -68,6 +68,7 @@ export async function regionalJobs(country: "lk" | "in", company="IFS1"): Promis
   return details.flatMap(d=>d.status==="fulfilled"?[d.value]:[]);
 }
 const sources: {name:string;run:()=>Promise<FeedJob[]>}[] = [
+  ...["country=LK","country=IN","worldwide=true"].flatMap(filter=>[1,2].map(page=>({name:`Himalayas ${filter} page ${page}`,run:async()=>normalizeHimalayas(await json(`https://himalayas.app/jobs/api/search?q=intern&${filter}&page=${page}`))}))),
   {name:"ITPro Sri Lanka internships",run:async()=>normalizeItpro(await sourceText("https://itpro.lk/rss/all/internship"))},
   {name:"LinkedIn employer India",run:()=>regionalJobs("in","LinkedIn3")},
   {name:"Bosch India",run:()=>regionalJobs("in","BoschGroup")},
@@ -78,10 +79,35 @@ const sources: {name:string;run:()=>Promise<FeedJob[]>}[] = [
 ];
 // Cache normalized public data only; CVs never enter the shared cache.
 export async function hybridPublicJobs() {
-  const results=await Promise.allSettled(sources.map(s=>unstable_cache(s.run,["public-jobs-v3",s.name],{revalidate:21600})()));
+  const results=await Promise.allSettled(sources.map(s=>unstable_cache(s.run,["public-jobs-v4",s.name],{revalidate:21600})()));
   const all=results.flatMap(r=>r.status==="fulfilled"?r.value:[]);
   const jobs=all.filter(j=>j.fetched_at && Date.parse(j.fetched_at)>Date.now()-86400000);
   const warnings=results.flatMap((r,i)=>r.status==="rejected"?[`${sources[i].name} unavailable; showing other sources only.`]:[]);
   if(jobs.length<all.length) warnings.push("Some cached listings were last checked over 24 hours ago and were omitted. Their closure status is unknown.");
   return {jobs,warnings};
+}
+
+const himalayasRow=z.object({
+  title:z.string().min(1),companyName:z.string().min(1),guid:z.string(),applicationLink:z.string(),description:z.string(),
+  locationRestrictions:z.array(z.string()).optional(),timezoneRestrictions:z.array(z.number()).optional(),
+  pubDate:z.number().finite().optional(),expiryDate:z.number().finite(),
+  minSalary:z.number().finite().nonnegative().nullable().optional(),maxSalary:z.number().finite().nonnegative().nullable().optional(),
+  currency:z.string().nullable().optional(),salaryPeriod:z.string().optional(),
+});
+export function normalizeHimalayas(raw:unknown,now=Date.now()):FeedJob[]{
+  return z.object({jobs:z.array(z.unknown())}).parse(raw).jobs.slice(0,20).flatMap(value=>{
+    const parsed=himalayasRow.safeParse(value);if(!parsed.success)return [];
+    const r=parsed.data,url=safeSourceUrl(r.applicationLink,'himalayas.app'),guid=safeSourceUrl(r.guid,'himalayas.app');
+    const expiry=new Date(r.expiryDate*1000);
+    if(!url||!guid||!Number.isFinite(expiry.getTime())||expiry.getTime()<=now)return [];
+    // Keep the supplied application URL unchanged, including attribution parameters.
+    const period=r.salaryPeriod==='annual'?'yearly':r.salaryPeriod;
+    const salary=r.minSalary!=null&&r.maxSalary!=null&&r.maxSalary>=r.minSalary&&r.currency&&period?
+      {min:r.minSalary,max:r.maxSalary,currency:r.currency.toUpperCase(),period}:null;
+    const location=r.locationRestrictions===undefined?'':r.locationRestrictions.length?r.locationRestrictions.join(', '):'Worldwide';
+    const timezone=r.timezoneRestrictions?.length?`Source timezone restrictions (UTC offsets): ${r.timezoneRestrictions.join(', ')}. Verify eligibility.\n`:'';
+    const description=(timezone+plainDescription(r.description)).slice(0,18000);
+    const published=r.pubDate?new Date(r.pubDate*1000):null;
+    return [{id:`Himalayas:${guid}`,title:r.title.slice(0,200),company:r.companyName.slice(0,200),location,remote:true,work_mode:'Remote' as const,url,description,source:'Himalayas',published:published&&Number.isFinite(published.getTime())?published.toISOString():null,skills:skillsIn(description),salary,application_url:null,expires_at:expiry.toISOString(),fetched_at:new Date(now).toISOString()}];
+  });
 }

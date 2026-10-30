@@ -52,7 +52,7 @@ export function JobDiscovery({ initial, hasCv, initialWarning }: { initial: Care
       <p>{role} | {location || "All listed locations"} | {preferences.work_mode} | Internship / trainee titles</p>
       <p>Salary preference: {preferences.salary_min ?? "No minimum"} to {preferences.salary_max ?? "No maximum"} {preferences.currency} / {preferences.salary_period}</p>
       {preferences.notes && <p>Additional requirements (need manual verification): {preferences.notes}</p>}
-      <p className="text-sm text-slate-600">Sources: ITPro.lk internships across Sri Lankan employers, IFS, Bosch India, the LinkedIn employer India careers board, Arbeitnow and Jobicy. Feeds refresh every six hours; personal results cache for one hour. This does not search the LinkedIn jobs platform or the entire web. Availability and regional coverage vary; remote eligibility needs checking.</p>
+      <p className="text-sm text-slate-600">Sources: ITPro.lk internships across Sri Lankan employers, IFS, Bosch India, the LinkedIn employer India careers board, Arbeitnow, Jobicy and Himalayas remote internships (Sri Lanka, India and worldwide). Feeds refresh every six hours; personal results cache for one hour. This does not search the LinkedIn jobs platform or the entire web. Availability and regional coverage vary; remote eligibility needs checking.</p>
     </section>
     {busy && <p role="status" className="rounded bg-violet-50 p-4">Finding jobs for your CV and saved requirements...</p>}
     {error && <p role="alert" className="rounded bg-red-50 p-3 text-red-800">{error}</p>}
