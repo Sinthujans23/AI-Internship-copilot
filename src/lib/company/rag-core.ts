@@ -6,7 +6,7 @@ import { verifyFacts,quoteExists } from "./evidence";
 export const ragFactsSchema=factsSchema.extend({required_skills:z.array(sourcedFact),preferred_skills:z.array(sourcedFact),company_technologies:z.array(sourcedFact)});
 export type Chunk={id:string;document_id:string;source_index:number;text:string;ordinal:number;content_hash:string};
 export type RetrievedChunk=Chunk&{similarity:number;source_url:string;retrieved_at:string};
-export type RagSummary={version:1;session_id:string;model:string;dimensions:number;indexed_chunks:number;retrieved_chunks:RetrievedChunk[];documents:{id:string;url:string;retrieved_at:string}[];required_skills:z.infer<typeof sourcedFact>[];preferred_skills:z.infer<typeof sourcedFact>[];company_technologies:z.infer<typeof sourcedFact>[];missing_required:string[];missing_preferred:string[]};
+export type RagSummary={agent?:import("./research-agent").ResearchTrace;version:1;session_id:string;model:string;dimensions:number;indexed_chunks:number;retrieved_chunks:RetrievedChunk[];documents:{id:string;url:string;retrieved_at:string}[];required_skills:z.infer<typeof sourcedFact>[];preferred_skills:z.infer<typeof sourcedFact>[];company_technologies:z.infer<typeof sourcedFact>[];missing_required:string[];missing_preferred:string[]};
 export function chunkSources(sources:ResearchSource[],ids:string[],size=1400):Chunk[]{
  const chunks:Chunk[]=[];
  sources.forEach((source,index)=>{

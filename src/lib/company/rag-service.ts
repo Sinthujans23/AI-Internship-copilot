@@ -6,6 +6,8 @@ import { fetchCompanySources,companyUrl } from "./website";
 import { chunkSources,retrievedSources,type RetrievedChunk,type RagSummary } from "./rag-core";
 import { researchCompany } from "./research";
 import type { CareerPreferences } from "./schema";
+import {runResearchAgent} from './research-agent';
+import {getOpenAI,aiModel,providerOptions} from '../services/openai';
 
 export const embeddingBatchSchema=z.object({model:z.string().min(1).max(200),dimensions:z.number().int().min(1).max(3072),vectors:z.array(z.array(z.number().finite()).min(1).max(3072)).min(1).max(64)}).superRefine((r,ctx)=>{
  if(r.vectors.some(v=>v.length!==r.dimensions||!v.some(n=>n!==0)))ctx.addIssue({code:z.ZodIssueCode.custom,message:"Invalid embedding dimensions or zero vector"});
@@ -33,7 +35,7 @@ export async function researchCompanyRag(client:SupabaseClient<Database>,userId:
  if(inserted.error)throw new AppError("Could not store research embeddings. Check pgvector and its migration.",503);
  const retrieved=new Map<string,RetrievedChunk>();
  // Query per document as well as topic to keep secondary pages from crowding out the primary vacancy.
- for(let i=0;i<queries.length;i++){
+ const retrieve=async(i:number)=>{
   const searches=await Promise.all(ids.map(id=>client.rpc("retrieve_company_chunks",{p_session:session,p_model:embedded.model,p_vector:JSON.stringify(embedded.vectors[chunks.length+i]),p_document:id,p_limit:3})));
   for(const result of searches){
    if(result.error)throw new AppError("Semantic retrieval failed. Check the RAG SQL function.",503);
@@ -45,8 +47,19 @@ export async function researchCompanyRag(client:SupabaseClient<Database>,userId:
     const existing=retrieved.get(hit.id);if(!existing||existing.similarity<hit.similarity)retrieved.set(hit.id,{...original,similarity:hit.similarity,source_url:hit.source_url,retrieved_at:hit.retrieved_at});
    }
   }
- }
+  return [...retrieved.values()].map(c=>({source_index:c.source_index,url:c.source_url,quote:c.text.slice(0,300)})).slice(0,27);
+ };
+ const agentStarted=Date.now();
+ const agent=await runResearchAgent(async(messages,tools)=>{
+  if(Date.now()-agentStarted>30000)throw new Error('Agent time limit');
+  const response=await getOpenAI().chat.completions.create({model:aiModel(),...providerOptions(),messages,tools,tool_choice:'auto',max_tokens:350},{timeout:Math.max(1,Math.min(10000,30000-(Date.now()-agentStarted))),maxRetries:0});
+  const choice=response.choices[0];if(!choice||choice.finish_reason==='length')throw new Error('Incomplete agent turn');
+  return choice.message;
+ },retrieve,preferences.target_role);
  const selected=[...retrieved.values()];
  const rag:RagSummary={version:1,session_id:session,model:embedded.model,dimensions:embedded.dimensions,indexed_chunks:chunks.length,retrieved_chunks:selected,documents:docs.map(d=>({id:d.id,url:d.source_url,retrieved_at:d.retrieved_at})),required_skills:[],preferred_skills:[],company_technologies:[],missing_required:[],missing_preferred:[]};
- return researchCompany(root,preferences,cv,{sources:retrievedSources(sources,selected),rag});
+ const report=await researchCompany(root,preferences,cv,{sources:retrievedSources(sources,selected),rag});
+ report.rag!.agent=agent;
+ if(agent.mode==='fallback')report.warnings.push('Research agent unavailable or returned invalid tool calls; the standard evidence retrieval completed instead.');
+ return report;
 }
