@@ -1,3 +1,4 @@
+import {displayCoaching} from "./display-coaching";
 import type { CareerPreferences, Coaching, CompanyFacts, PreferenceCheck, ResearchSource } from "./schema";
 
 export const normalizeQuote = (value: string) => value.toLowerCase().replace(/\s+/g, " ").trim();
@@ -33,6 +34,7 @@ export function verifyFacts(input: CompanyFacts, sources: ResearchSource[]): Com
   };
 }
 export function verifyCoaching(coaching: Coaching, cvText: string): Coaching {
+  coaching = displayCoaching(coaching);
   const numbers = (value: string): string[] => value.match(/\b\d+(?:\.\d+)?%?/g) || [];
   return { ...coaching,
     cv_additions: (coaching.cv_additions || []).slice(0, 6),
