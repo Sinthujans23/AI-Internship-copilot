@@ -146,3 +146,8 @@ Production build passed, including type validation and generation of all 23 stat
 ## Step 29: Himalayas API connection
 
 110 TypeScript tests, ESLint and production build passed. New tests verify country/unknown/worldwide semantics, salary periods, source application-link preservation, unsafe URLs, expired jobs and invalid/empty provider responses. Live Sri Lanka filtered request returned HTTP 200 with 20 normalized records across 17 companies; these are pre-title/pre-preference filter counts, not promised recommendations. An initial multi-region live smoke failed with a network error; the bounded single-country retry passed. India/worldwide and second-page live responses were not independently confirmed. No hosted SQL or credentials changed; authenticated UI acceptance remains manual.
+
+## Step 30: Diagnose company report save failures
+
+The user-reported error occurs after research completes, during the company_reports insert. The old handler incorrectly recommended a migration for every database failure. It now distinguishes schema errors, RLS/permission denial, deleted CV/account references and duplicate IDs using safe error codes; raw database details are not disclosed. Preflight now checks every required report column before expensive work. 112 TypeScript tests and ESLint passed. Both local service health endpoints responded 200. The hosted database insert failure has NOT been reproduced or resolved: the user needs to apply/check 20261027050000_company_research.sql and supply the new safe diagnostic code if it persists. No hosted data or SQL was changed.
+Production build passed, including type checks and all 23 static pages.
