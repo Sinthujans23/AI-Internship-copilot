@@ -1,11 +1,12 @@
 import {apiError} from "@/lib/api";
+import {applicationDatabaseError} from "@/lib/application-error";
 import {readJson} from "@/lib/security/request";
 ﻿import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { applicationSchema, applicationUpdateSchema, applicationChanges } from "@/lib/applications";
 
-// Select only the Step 1 columns, including when upgrading the old schema.
+// Includes tracker fields; the tracker migration must be installed.
 const columns = "id,user_id,company,role,status,job_text,job_analysis,match_score,match_result,agent_result,created_at,job_url,notes,application_date,interview_date,follow_up_date,cv_id,company_report_id";
 export const dynamic = "force-dynamic";
 
@@ -20,7 +21,7 @@ export async function GET(request: Request) {
     if (historyId) {
       const id = z.string().uuid().parse(historyId);
       const result = await supabase.from("application_history").select("*").eq("user_id", user.id).eq("application_id", id).order("created_at", {ascending:false});
-      if (result.error) throw new Error("Could not load history. Apply the tracker migration.");
+      if (result.error) return databaseFailure(result.error);
       return NextResponse.json(result.data, {headers:{"Cache-Control":"private, no-store"}});
     }
     const { data, error } = await supabase.from("applications").select(columns)
@@ -72,6 +73,7 @@ export async function DELETE(request: Request) {
   } catch (error) { return failure(error); }
 }
 
-function databaseFailure(error: {code?:string}) {
- return NextResponse.json({error:error.code === "23505" ? "This job URL is already saved in your tracker." : "Could not save or load applications. Check your linked CV/report and apply the tracker migration."}, {status:error.code === "23505" ? 409 : 400});
+function databaseFailure(error: {code?:string;message?:string}) {
+ const result=applicationDatabaseError(error);
+ return NextResponse.json({error:result.message}, {status:result.status});
 }

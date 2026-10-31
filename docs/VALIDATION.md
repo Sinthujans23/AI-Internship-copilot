@@ -178,3 +178,8 @@ Saved jobs, CV versions and tailoring sessions refresh independently; the latest
 
 130 TypeScript tests, typecheck and ESLint passed. Manual acceptance still required: save a job, refresh Tailor CV, generate a session, accept a suggestion, export/save through the PDF editor, then refresh to see the new linked version. No live authenticated browser/provider or hosted database test was performed for this UI change. No new migration is needed.
 Production build passed, including type/lint validation and all 23 static pages.
+
+## Step 36: Application storage diagnostics
+
+Replaced the generic migration/link error with safe code-specific schema, permission, duplicate, linked-record and constraint messages. History now uses the same diagnostic path. Added three tests covering these branches and suppression of private database messages. 133 TypeScript tests and ESLint passed. The reported hosted database failure has not been reproduced or confirmed resolved; the new message is necessary to distinguish migration issues from other causes. No hosted SQL, credentials or application data changed. See APPLICATION_TRACKER.md for migration and retry instructions.
+Production build passed, including type validation and all 23 static pages.

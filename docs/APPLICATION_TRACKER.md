@@ -38,3 +38,15 @@ HTTP(S) URLs are normalized by removing fragments and known tracking parameters,
 ## Limits
 
 Dates are calendar days, not scheduled notifications or interview times. Detail events record that an edit happened, not copies of old private notes. Deletion intentionally removes history; there is no undo. Updates use last-write-wins across browser tabs. The current simple board uses the Supabase default row limit (normally 1,000); report choices show the latest 100 reports. No automatic job submission, email, calendar integration or reminders. Hosted SQL and signed-in browser checks must be performed in your Supabase project.
+
+## Storage errors
+
+The API reports safe database codes for list, history, create, update and delete failures. It never returns raw database details.
+
+- `42703`, `42P01`, `PGRST204`, `PGRST205`: check the connected Supabase project and apply `supabase/migrations/20261029000000_application_tracker.sql` after the existing application, CV and company research migrations. Run the entire file. If SQL fails, resolve that error before retrying; do not delete existing rows. A stale PostgREST cache can be refreshed with `NOTIFY pgrst, 'reload schema';` after a successful migration.
+- `42501`: verify authenticated table grants and owner RLS policies. Do not disable RLS.
+- `23503` or a recognized linked-record trigger failure: refresh and choose an owned CV/report that still exists, or remove the optional link.
+- `23505`: this job URL is already saved; edit its existing tracker entry.
+- `23514`: validate input and confirm the tracker migration expanded the permitted application stages.
+
+Retry loading after correcting the cause. A load failure is not evidence that a particular CV link is invalid. If the error persists, share only its safe code, never keys or private record contents.
