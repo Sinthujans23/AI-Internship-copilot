@@ -70,3 +70,9 @@ Coverage includes heading/mention distinction, empty sections, deterministic and
 6. Use two test accounts: neither may read/review the other's CV/history. Send unauthenticated GET/POST to `/api/cvs/review`: both must return 401.
 7. Try six new analyses in one hour: the sixth should return 429. Double-click/concurrent attempts should not start two AI calls. History remains available.
 8. Confirm CV download/edit, job matching and company research still use the newest CV. Test loading, errors, history selector and copy buttons in your browser/mobile viewport.
+
+## Evidence selection update (Step 34)
+
+The AI now selects IDs from a bounded catalogue of exact CV passages instead of reproducing quotes from memory. The server restores original text before the existing analyzeCv evidence/rewrite validation. IDs are restricted by the response schema; unknown IDs fail validation. The catalogue excludes redacted contact/link lines, contains at most 200 passages of 600 characters, and may omit later content in unusually fragmented CVs. This reduces quote-copy failures but does not establish that every AI assessment is semantically correct. It still uses one structured generation call and the existing five-per-hour quota.
+
+Old warning messages do not mean the UI hid valid information: unsupported AI categories fall back to rule-based scores and invalid recommendations are discarded. The UI now explains this distinction and explains when no rewrite passes validation. Scores are not job-match or ATS scores. Existing history is unchanged. Select Analyze again (new version) to obtain a new review using the catalogue; simply refreshing may reuse old saved analysis. Review extracted text first if PDF extraction is inaccurate. No SQL or API key change is required.
