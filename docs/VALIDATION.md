@@ -183,3 +183,10 @@ Production build passed, including type/lint validation and all 23 static pages.
 
 Replaced the generic migration/link error with safe code-specific schema, permission, duplicate, linked-record and constraint messages. History now uses the same diagnostic path. Added three tests covering these branches and suppression of private database messages. 133 TypeScript tests and ESLint passed. The reported hosted database failure has not been reproduced or confirmed resolved; the new message is necessary to distinguish migration issues from other causes. No hosted SQL, credentials or application data changed. See APPLICATION_TRACKER.md for migration and retry instructions.
 Production build passed, including type validation and all 23 static pages.
+
+## Step 37: Paginated multi-provider job pipeline
+
+137 TypeScript tests and ESLint passed. New tests cover retaining 135 candidates, pre-ranking deduplication/expiry filtering, four bounded semantic batches, partial batch failure, empty/non-intern feeds and complete non-overlapping result pagination. The existing offline synthetic ranking benchmark reports mean Recall@3=1.000 and NDCG@3=1.000; it excludes semantic evaluation and does not establish real-world quality.
+
+The previous 30-result cutoff is removed. The first 120 preliminary candidates receive semantic evaluation; remaining fetched jobs keep explicit skill/preference-only scores. All fetched eligible jobs remain browsable in ten-card pages. Himalayas fetches three pages per region, with documented bounded coverage. Public and personal cache versions change; partial snapshots are reused for one hour. No hosted migrations, private CV provider calls or authenticated live-browser acceptance tests were performed. No new keys are required. See HYBRID_JOB_MATCHING.md for manual test steps and provider limitations.
+Production build passed, including TypeScript validation and all 23 static pages.

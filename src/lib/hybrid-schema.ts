@@ -12,5 +12,5 @@ export const hybridResponseSchema=z.object({
     score:z.number().int().min(0).max(100),matched_skills:skills,missing_required:skills,missing_preferred:skills,mentioned_skills:skills,required_skills:skills,preferred_skills:skills,
     components:z.array(z.object({name:z.string(),value:z.number().min(0).max(1).nullable(),weight:z.number().min(0).max(100)})),
     explanations:z.array(z.string()),semantic:z.number().min(0).max(1).nullable(),version:z.enum(["hybrid-1","hybrid-2"]),
-  })).max(30),warnings:z.array(z.string()),cv_name:z.string(),searched_at:z.string(),available_count:z.number().nonnegative(),version:z.enum(["hybrid-1","hybrid-2"]),
+  })).max(2000),warnings:z.array(z.string()),cv_name:z.string(),searched_at:z.string(),available_count:z.number().nonnegative(),version:z.enum(["hybrid-1","hybrid-2"]),
 });

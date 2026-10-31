@@ -1,4 +1,5 @@
 "use client";
+import {jobPage} from "@/lib/job-pagination";
 import { SaveApplication } from "./save-application";
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -14,6 +15,7 @@ export function JobDiscovery({ initial, hasCv, initialWarning }: { initial: Care
   const remote = preferences.work_mode === "Remote";
   const internships = true;
   const [showMismatches,setShowMismatches]=useState(false);
+  const [page,setPage]=useState(1);
   const [searchedAt,setSearchedAt]=useState("");
   const [jobs, setJobs] = useState<HybridJob[]>([]);
   const [busy, setBusy] = useState(hasCv);
@@ -24,7 +26,7 @@ export function JobDiscovery({ initial, hasCv, initialWarning }: { initial: Care
   useEffect(() => {
     // Search automatically; cancellation prevents stale responses on navigation.
     const controller = new AbortController();
-    setJobs([]); setWarnings([]); setError(""); setSearched(false);
+    setPage(1); setJobs([]); setWarnings([]); setError(""); setSearched(false);
     if (!hasCv) { setBusy(false); return () => controller.abort(); }
     setBusy(true);
     async function search() {
@@ -41,6 +43,7 @@ export function JobDiscovery({ initial, hasCv, initialWarning }: { initial: Care
     return () => controller.abort();
   }, [hasCv, role, location, remote, internships, revision]);
   const visibleJobs=jobs.filter(job=>showMismatches || job.preference_fit!=="mismatch");
+  const paginated=jobPage(visibleJobs,page);
   const hidden=jobs.filter(job=>job.preference_fit==="mismatch").length;
   return <div className="space-y-8">
     <header><h1 className="text-3xl font-bold">Find jobs for your profile</h1><p className="mt-2 text-slate-600">Saved role, location, work mode and salary requirements are checked first. Your CV skills and semantic relevance rank jobs within those groups.</p></header>
@@ -57,12 +60,13 @@ export function JobDiscovery({ initial, hasCv, initialWarning }: { initial: Care
     {busy && <p role="status" className="rounded bg-violet-50 p-4">Finding jobs for your CV and saved requirements...</p>}
     {error && <p role="alert" className="rounded bg-red-50 p-3 text-red-800">{error}</p>}
     {warnings.map(warning => <p key={warning} role="status" className="rounded bg-amber-50 p-3">{warning}</p>)}
-    {searched && <section className="space-y-4"><h2 className="text-xl font-semibold">{visibleJobs.length} jobs across {new Set(visibleJobs.map(j=>j.company.toLowerCase().trim())).size} companies · {cvName}</h2><p className="text-sm text-slate-600">Requirement matches come first, then jobs with unknown details. Known requirement mismatches are hidden by default. Scores combine CV skills, semantic relevance and available preference evidence; they are not hiring probabilities. At most 30 candidates are evaluated.</p>
+    {searched && <section className="space-y-4"><h2 className="text-xl font-semibold">{visibleJobs.length} jobs across {new Set(visibleJobs.map(j=>j.company.toLowerCase().trim())).size} companies · {cvName}</h2><p className="text-sm text-slate-600">Requirement matches come first, then jobs with unknown details. Known requirement mismatches are hidden by default. Scores combine CV skills, semantic relevance and available preference evidence; they are not hiring probabilities. All fetched eligible internships remain available below. Up to 120 candidates receive semantic comparison; other scores use available skills and preference evidence.</p>
       <p className="text-sm">Search snapshot: {searchedAt ? new Date(searchedAt).toLocaleString() : "Unknown"}. Source details may have changed; check the original listing.</p>
-      <label className="block"><input type="checkbox" checked={showMismatches} onChange={e=>setShowMismatches(e.target.checked)} /> Show jobs that do not match my requirements ({hidden})</label>
+      <label className="block"><input type="checkbox" checked={showMismatches} onChange={e=>{setShowMismatches(e.target.checked);setPage(1);}} /> Show jobs that do not match my requirements ({hidden})</label>
       {!visibleJobs.length && jobs.length>0 && <p>No jobs in this result set match your saved requirements without a known mismatch. Broaden requirements or show mismatches; no listings or salary details are invented.</p>}
       {!jobs.length && <p>No internships were found in the available public feeds. Try again later; current source coverage is limited.</p>}
-      {visibleJobs.map(job => <article key={job.id} className="space-y-3 rounded-xl border bg-white p-5">
+      {visibleJobs.length>0&&<nav aria-label="Job result pages" className="flex flex-wrap items-center gap-4"><button className="rounded border px-3 py-2 disabled:opacity-50" disabled={paginated.page===1} onClick={()=>setPage(paginated.page-1)}>Previous</button><p role="status">Page {paginated.page} of {paginated.pages} | {paginated.total} jobs</p><button className="rounded border px-3 py-2 disabled:opacity-50" disabled={paginated.page===paginated.pages} onClick={()=>setPage(paginated.page+1)}>Next</button></nav>}
+      {paginated.items.map(job => <article key={job.id} className="space-y-3 rounded-xl border bg-white p-5">
         <div className="flex flex-wrap justify-between gap-3"><div><h3 className="text-lg font-bold">{job.title}</h3><p>{job.company} | {job.location || "Location unknown"}</p></div><p className="font-semibold text-violet-700">{job.score}/100 relevance</p></div>
         <p className="font-medium">Requirements: {job.preference_fit==="match"?"Matches available listing fields":job.preference_fit==="mismatch"?"Does not match one or more requirements":"Needs verification: some information is unknown"}</p>
         <ul className="space-y-1 text-sm">{job.preference_checks?.map(check=><li key={check.name}><b>{check.name}: {check.status=== "unknown"?"Needs verification":check.status}</b>: {check.reason}</li>)}</ul>

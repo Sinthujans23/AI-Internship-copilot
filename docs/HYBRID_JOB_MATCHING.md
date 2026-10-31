@@ -17,7 +17,7 @@ flowchart LR
   C[Cached public APIs] --> D[Normalize, deduplicate, discard closed/expired]
   B --> E[Skill and preference ranking]
   D --> E
-  E --> F[Top 30 candidates]
+  E --> F[Top 120 candidates in batches of 30]
   F --> G[Private FastAPI /rank]
   G --> H[Configured embedding provider]
   H --> I[Hybrid ranking + explanations]
@@ -27,7 +27,7 @@ flowchart LR
 
 The deterministic skill vocabulary is the existing CV skill catalogue plus aliases such as React.js/ReactJS, NodeJS, NextJS and Postgres. Headings and explicit requirement phrases separate required, preferred and ordinary mentions. Negated requirements stay unclassified. This conservative English-language heuristic is not a complete understanding of every job description: unusual headings, implicit requirements, alternatives such as “Python or Java”, and unlisted skills need human review.
 
-Weights: required skill coverage 35%, preferred 10%, other mentions 10%, semantic relevance 30%, preference fit 15%. Skill coverage counts canonical CV skill mentions; semantic similarity never claims proof of a particular skill. FastAPI embeds CV chunks and job texts in one batch and averages CV-chunk/job cosine similarities. The first 6,000 characters of each job enter semantic matching; deterministic extraction uses up to 18,000. CV input is bounded at 50,000 characters. Preliminary ranking selects at most 30 candidates before semantic reranking.
+Weights: required skill coverage 35%, preferred 10%, other mentions 10%, semantic relevance 30%, preference fit 15%. Skill coverage counts canonical CV skill mentions; semantic similarity never claims proof of a particular skill. FastAPI embeds CV chunks and job texts in one batch and averages CV-chunk/job cosine similarities. The first 6,000 characters of each job enter semantic matching; deterministic extraction uses up to 18,000. CV input is bounded at 50,000 characters. Preliminary ranking selects at most 120 candidates for semantic evaluation in four parallel batches of up to 30. All remaining fetched candidates remain in the ranked snapshot with skill/preference scores and explicit unavailable-semantic explanations.
 
 Preferences average available role-term coverage, any preferred location match, explicit work-mode match and salary-range overlap. Locations use phrase boundaries; remote does not mean worldwide. Missing data and incompatible salary currencies/periods are excluded, never silently converted or treated as confirmed matches. As of hybrid-2, candidates are grouped by requirements fit before CV score: available fields match, then unknown fields, then mismatches. Mismatches are hidden by default with an explicit show-mismatches toggle. Each card lists role/title, location, work-mode and comparable salary checks. Role matching is a keyword/related-role heuristic, not an employer eligibility decision. Freeform notes are shown as unverified conditions, never assumed satisfied. Internship/trainee titles use word boundaries so International does not count as Intern.
 
@@ -107,10 +107,21 @@ Manual test: open Find Jobs and save your requirements. Verify ITPro attribution
 
 ## Himalayas public API (Step 29)
 
-Find Jobs also connects server-side to https://himalayas.app/jobs/api/search with q=intern and separate country=LK, country=IN and worldwide=true searches. Each query reads at most two 20-result pages and caches public results for six hours. It never sends CV text to the job provider. Overlapping results are deduplicated before matching. Existing title checks discard ordinary mentions of internships in senior-job descriptions. Shared public API throttling causes a source warning while other feeds remain available.
+Find Jobs also connects server-side to https://himalayas.app/jobs/api/search with q=intern and separate country=LK, country=IN and worldwide=true searches. Each query reads at most three 20-result pages and caches public results for six hours. It never sends CV text to the job provider. Overlapping results are deduplicated before matching. Existing title checks discard ordinary mentions of internships in senior-job descriptions. Shared public API throttling causes a source warning while other feeds remain available.
 
 No API key or new SQL is required. API reference and display terms: https://himalayas.app/docs/remote-jobs-api. The supplied applicationLink is preserved with attribution as the card source/apply destination; it is not labelled a direct employer link. Expired entries are removed, including on personal-cache reads. Country restrictions, timezone restrictions and salary periods are retained; absent locations stay unknown, while an explicitly empty country list means worldwide according to the provider. Eligibility still needs employer verification. This is a bounded snapshot, not exhaustive platform coverage.
 
 Remotive was investigated but not integrated: its public API terms restrict signup-gated listings, which require further review for this authenticated application (https://github.com/remotive-com/remote-jobs-api). No private API credentials were added.
 
 Test by saving Remote preferences and a country or role in Find Jobs. Check Himalayas source attribution, expiry/unknown fields, and existing requirements-based ranking. Very restrictive preferences may still produce no results.
+
+
+## Paginated discovery pipeline (Step 37)
+
+Multiple existing public adapters normalize results to `FeedJob`. The pipeline removes duplicates and confirmed expired/closed listings, filters internship titles, ranks by CV skills and saved preferences, then applies bounded semantic reranking. A failed semantic batch preserves that batch's jobs with a partial-data warning; successful batches retain their scores. Pages browse the same snapshot without new provider, AI, or database reservation calls.
+
+The UI shows 10 jobs per page with accessible Previous/Next buttons and page counts. Changing requirements or the mismatch toggle resets to page one. Known preference mismatches remain hidden by default, and unknown fields remain labelled. The API now retains all candidates from the bounded provider pool rather than discarding everything beyond the first 30. No SQL or new key is required. Snapshot validation allows up to 2,000 rows; current provider fetch bounds stay below that ceiling.
+
+Himalayas pagination follows its [official API reference](https://himalayas.app/docs/remote-jobs-api). Each region requests pages 1?3; this bounded fetch is not an exhaustive crawl. Other providers retain their existing documented feed/board limits. Public caches use the v5 key; personal snapshots, including partial results, are reused for one hour to prevent repeated embedding charges. Expiry is rechecked when returning a cached snapshot. Provider listings may close before their supplied expiration time.
+
+Manual test: start both services, sign in and open Find Jobs with a saved CV/preferences. With more than ten visible results, navigate Next/Previous and confirm no new search network request or duplicate cards. Change preferences and verify page one is selected. Toggle mismatches on a later page and verify the page resets. Stop the matching service and search with changed preferences: cards should remain with unavailable-semantic explanations and a warning. Live source availability determines the number of matches; fixtures test pagination independently of provider availability.

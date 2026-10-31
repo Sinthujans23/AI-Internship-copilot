@@ -68,7 +68,7 @@ export async function regionalJobs(country: "lk" | "in", company="IFS1"): Promis
   return details.flatMap(d=>d.status==="fulfilled"?[d.value]:[]);
 }
 const sources: {name:string;run:()=>Promise<FeedJob[]>}[] = [
-  ...["country=LK","country=IN","worldwide=true"].flatMap(filter=>[1,2].map(page=>({name:`Himalayas ${filter} page ${page}`,run:async()=>normalizeHimalayas(await json(`https://himalayas.app/jobs/api/search?q=intern&${filter}&page=${page}`))}))),
+  ...["country=LK","country=IN","worldwide=true"].flatMap(filter=>[1,2,3].map(page=>({name:`Himalayas ${filter} page ${page}`,run:async()=>normalizeHimalayas(await json(`https://himalayas.app/jobs/api/search?q=intern&${filter}&page=${page}`))}))),
   {name:"ITPro Sri Lanka internships",run:async()=>normalizeItpro(await sourceText("https://itpro.lk/rss/all/internship"))},
   {name:"LinkedIn employer India",run:()=>regionalJobs("in","LinkedIn3")},
   {name:"Bosch India",run:()=>regionalJobs("in","BoschGroup")},
@@ -79,11 +79,12 @@ const sources: {name:string;run:()=>Promise<FeedJob[]>}[] = [
 ];
 // Cache normalized public data only; CVs never enter the shared cache.
 export async function hybridPublicJobs() {
-  const results=await Promise.allSettled(sources.map(s=>unstable_cache(s.run,["public-jobs-v4",s.name],{revalidate:21600})()));
+  const results=await Promise.allSettled(sources.map(s=>unstable_cache(s.run,["public-jobs-v5",s.name],{revalidate:21600})()));
   const all=results.flatMap(r=>r.status==="fulfilled"?r.value:[]);
   const jobs=all.filter(j=>j.fetched_at && Date.parse(j.fetched_at)>Date.now()-86400000);
   const warnings=results.flatMap((r,i)=>r.status==="rejected"?[`${sources[i].name} unavailable; showing other sources only.`]:[]);
   if(jobs.length<all.length) warnings.push("Some cached listings were last checked over 24 hours ago and were omitted. Their closure status is unknown.");
+  warnings.push("Provider coverage is bounded: Himalayas supplies up to three search pages per region; other feeds and employer boards have their own limits. This is not an exhaustive web search.");
   return {jobs,warnings};
 }
 
