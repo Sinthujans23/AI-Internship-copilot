@@ -32,6 +32,10 @@ Deleting a source CV or job cascades its tailoring sessions. Surviving revised C
 
 ## Verification
 
+The dashboard loads saved jobs, CV versions and sessions independently. The latest session is selected on first load. Use **Refresh jobs, sessions and CV versions** after saving a job or revised PDF in another page; a valid current selection is preserved. Empty lists explain the next step, and failed requests identify the affected list. The CV/job dropdowns create a new session; the saved-session selector opens an existing snapshot.
+
+Acceptance alone does not create a tailored PDF. In the PDF editor, apply the approved suggestion to its matching block, queue the edit, preview it, then choose **Approve and save as new current CV**. Return to Tailor CV and refresh to see the saved version.
+
 - `npm run test`: extraction, invalid AI data, injected/partial quotes, individual acceptance, required/preferred gaps, ownership and upload/version regression coverage.
 - `node scripts/test-cv-v2-db.mjs --tailoring`: isolated synthetic Postgres ownership, acceptance persistence, immutable analysis, version lineage, original preservation and repeat-migration checks.
 - In `matching-service`: `.\.venv\Scripts\python.exe -m unittest test_pdf_editing` verifies actual PDF editing/export and unsupported-layout behavior.

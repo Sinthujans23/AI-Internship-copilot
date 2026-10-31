@@ -171,3 +171,10 @@ Final production build passed after the missing/legacy guidance notice change, i
 
 130 TypeScript tests, typecheck and ESLint passed. Four new tests cover exact-text restoration including CRLF extraction, rejection of invented IDs, contact-marker exclusion/input bounds and preservation of metric-rewrite rejection. UI explains discarded AI evidence versus retained deterministic scores and empty rewrites. No private CV/provider call or hosted DB mutation was performed. Actual user CV acceptance remains manual; previous analyses are preserved and require explicit Analyze again to use the updated evidence-selection protocol.
 Production build passed, including type/lint verification and all 23 static pages.
+
+## Step 35: Tailoring dashboard saved data
+
+Saved jobs, CV versions and tailoring sessions refresh independently; the latest saved session is selected initially and valid selections survive refresh. Empty lists explain how to save a job, generate a session and save an approved PDF version. Missing lineage columns produce a migration message. The existing authenticated APIs, ownership rules and PDF export remain unchanged.
+
+130 TypeScript tests, typecheck and ESLint passed. Manual acceptance still required: save a job, refresh Tailor CV, generate a session, accept a suggestion, export/save through the PDF editor, then refresh to see the new linked version. No live authenticated browser/provider or hosted database test was performed for this UI change. No new migration is needed.
+Production build passed, including type/lint validation and all 23 static pages.
