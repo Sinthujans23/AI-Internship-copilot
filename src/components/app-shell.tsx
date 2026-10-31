@@ -1,28 +1,31 @@
 import Link from "next/link";
 import { logout } from "@/app/logout/actions";
+import { WorkspaceNav } from "@/components/workspace-nav";
 
 export function AppShell({ children, email }: { children: React.ReactNode; email: string }) {
   return (
     <div className="min-h-screen bg-slate-50">
       <header className="border-b border-slate-200 bg-white">
-        <nav className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-4 px-4 py-4">
-          <Link href="/profile" className="text-lg font-bold text-violet-700">AI Internship Copilot</Link>
-          <div className="flex flex-wrap items-center gap-4">
-            <Link href="/dashboard" className="text-violet-700 underline">Career readiness</Link>
-            <Link href="/profile" className="text-violet-700 underline">CV profile</Link>
-            <Link href="/tailoring" className="text-violet-700 underline">Tailor CV</Link>
-            <Link href="/applications" className="text-violet-700 underline">Applications</Link>
-            <Link href="/jobs" className="text-violet-700 underline">Find jobs</Link>
-            <Link href="/companies" className="text-violet-700 underline">Company shortlist</Link>
-            <Link href="/github" className="text-violet-700 underline">GitHub intelligence</Link>
-            <Link href="/learning" className="text-violet-700 underline">Learning roadmap</Link>
-            <span className="break-all text-sm text-slate-600">{email}</span>
-            {/* A server action clears cookies before redirecting to login. */}
-            <form action={logout}><button className="rounded border border-slate-300 px-3 py-2">Log out</button></form>
+        <div className="mx-auto flex max-w-screen-2xl flex-wrap items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
+          <Link href="/dashboard" className="flex items-center gap-3">
+            <span className="grid size-10 place-items-center rounded-xl bg-violet-700 text-sm font-bold text-white">AI</span>
+            <span>
+              <span className="block text-base font-bold tracking-tight text-slate-900">Internship Copilot</span>
+              <span className="block text-xs text-slate-500">Your career workspace</span>
+            </span>
+          </Link>
+          <div className="flex items-center gap-3">
+            <span title={email} className="hidden max-w-56 truncate text-sm text-slate-600 sm:block">{email}</span>
+            <form action={logout}>
+              <button className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">Log out</button>
+            </form>
           </div>
-        </nav>
+        </div>
       </header>
-      <main className="mx-auto max-w-5xl px-4 py-8">{children}</main>
+      <div className="mx-auto grid max-w-screen-2xl gap-6 px-4 py-5 sm:px-6 lg:grid-cols-[15rem_minmax(0,1fr)] lg:gap-8 lg:px-8 lg:py-8">
+        <WorkspaceNav />
+        <main className="min-w-0 space-y-6">{children}</main>
+      </div>
     </div>
   );
 }
