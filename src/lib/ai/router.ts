@@ -1,5 +1,8 @@
 // Routing is code, not another paid LLM call. Each entry is one compatible stage.
 export const aiStages = {
+  mock_interview_questions: ['five CV and job specific practice questions'],
+  mock_interview_feedback: ['answer rubric', 'strengths', 'improvement tips', 'answer outlines'],
+  application_draft_pack: ['cover letter', 'application email', 'follow-up draft'],
   job_details: ['job extraction'],
   application_content: ['CV bullets', 'email draft'],
   employer_evidence: ['required/preferred skills', 'company facts', 'application instructions'],

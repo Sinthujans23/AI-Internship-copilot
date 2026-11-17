@@ -6,10 +6,17 @@ import Link from "next/link";
 import { CareerRequirements } from "./career-requirements";
 import type { CareerPreferences } from "@/lib/company/schema";
 import type { HybridJob } from "@/lib/hybrid-jobs";
+import type { JobFeedback } from "@/lib/career/schema";
+import { JobFeedbackControls } from "./job-feedback-controls";
+import { careerRequest } from "./career-picker";
+import { canonicalJobUrl } from "@/lib/applications";
 
 export function JobDiscovery({ initial, hasCv, initialWarning }: { initial: CareerPreferences; hasCv: boolean; initialWarning: string }) {
   const [preferences, setPreferences] = useState(initial);
   const [revision, setRevision] = useState(0);
+  const [feedback, setFeedback] = useState<JobFeedback[]>([]);
+  const [feedbackError, setFeedbackError] = useState("");
+  useEffect(() => { let active=true; careerRequest<JobFeedback[]>("/api/jobs/feedback").then(rows=>{if(active){setFeedback(rows);setFeedbackError("");}}).catch(e=>{if(active)setFeedbackError(String(e));});return()=>{active=false;}; },[revision]);
   const role = preferences.target_role.slice(0, 120);
   const location = preferences.locations.join(", ");
   const remote = preferences.work_mode === "Remote";
@@ -60,6 +67,8 @@ export function JobDiscovery({ initial, hasCv, initialWarning }: { initial: Care
     {busy && <p role="status" className="rounded bg-violet-50 p-4">Finding jobs for your CV and saved requirements...</p>}
     {error && <p role="alert" className="rounded bg-red-50 p-3 text-red-800">{error}</p>}
     {warnings.map(warning => <p key={warning} role="status" className="rounded bg-amber-50 p-3">{warning}</p>)}
+    {feedbackError && <p role="alert">{feedbackError}</p>}
+    <details className="space-y-3 rounded-xl border bg-white p-5"><summary className="font-semibold">Your job feedback ({feedback.length})</summary><p className="my-3 text-sm">Relevant adds 5 points and Not relevant subtracts 10 on that listing, within its requirement group. Reported expired listings are hidden for your account. Feedback applies to future searches of the same listing; it does not train a model. Latest 1,000 feedback records are used.</p>{feedback.map(f=><div key={f.job_url} className="space-y-2 border-t py-3"><p>{f.title} — {f.company}: {f.verdict.replaceAll("_"," ")}</p><JobFeedbackControls job={{url:f.job_url,title:f.title,company:f.company}} feedback={f} onSaved={()=>setRevision(r=>r+1)}/></div>)}{!feedback.length&&<p>No saved feedback yet.</p>}</details>
     {searched && <section className="space-y-4"><h2 className="text-xl font-semibold">{visibleJobs.length} jobs across {new Set(visibleJobs.map(j=>j.company.toLowerCase().trim())).size} companies · {cvName}</h2><p className="text-sm text-slate-600">Requirement matches come first, then jobs with unknown details. Known requirement mismatches are hidden by default. Scores combine CV skills, semantic relevance and available preference evidence; they are not hiring probabilities. All fetched eligible internships remain available below. Up to 120 candidates receive semantic comparison; other scores use available skills and preference evidence.</p>
       <p className="text-sm">Search snapshot: {searchedAt ? new Date(searchedAt).toLocaleString() : "Unknown"}. Source details may have changed; check the original listing.</p>
       <label className="block"><input type="checkbox" checked={showMismatches} onChange={e=>{setShowMismatches(e.target.checked);setPage(1);}} /> Show jobs that do not match my requirements ({hidden})</label>
@@ -85,6 +94,7 @@ export function JobDiscovery({ initial, hasCv, initialWarning }: { initial: Care
         <p className="whitespace-pre-line text-sm text-slate-600">{job.description.slice(0,350)}{job.description.length>350 ? "..." : ""}</p>
         <div className="flex flex-wrap gap-4"><a href={job.url} target="_blank" rel="noopener noreferrer" className="text-violet-700 underline">View listing on {job.source}</a>{job.application_url ? <a href={job.application_url} target="_blank" rel="noopener noreferrer" className="text-violet-700 underline">Official application</a> : <span className="text-xs text-slate-500">Direct employer application link unavailable; apply through the source listing.</span>}</div>
         <SaveApplication company={job.company} role={job.title} url={job.application_url || job.url} text={job.description} />
+        <JobFeedbackControls job={job} feedback={feedback.find(f=>f.job_url===canonicalJobUrl(job.url))} onSaved={()=>setRevision(r=>r+1)}/>
       </article>)}
     </section>}
   </div>;

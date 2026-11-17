@@ -27,7 +27,7 @@ export function jobSkills(text: string) {
 }
 export type HybridJob = PublicJob & JobMetadata & { preference_checks?:PreferenceCheck[]; preference_fit?:"match"|"unknown"|"mismatch"; score: number; matched_skills: string[]; missing_required: string[]; missing_preferred: string[]; mentioned_skills: string[]; required_skills: string[]; preferred_skills: string[]; components: { name: string; value: number | null; weight: number }[]; explanations: string[]; semantic: number | null; version: string };
 const lower = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
-export function eligibleJobs(jobs: (PublicJob & JobMetadata)[], now = Date.now()) {
+export function eligibleJobs<T extends PublicJob & JobMetadata>(jobs: T[], now = Date.now()): T[] {
   const urls = new Set<string>(), fingerprints = new Set<string>();
   return jobs.filter(job => {
     if (job.closed || (job.expires_at && Date.parse(job.expires_at) <= now)) return false;

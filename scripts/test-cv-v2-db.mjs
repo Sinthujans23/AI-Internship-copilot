@@ -19,7 +19,9 @@ try {
     await new Promise(resolve => setTimeout(resolve, 1000));
   }
   if (!ready) throw new Error("Temporary PostgreSQL did not become ready.");
-  const files = process.argv.includes("--production")
+  const files = process.argv.includes("--career")
+    ? ["tests/sql/cv-v2-fixture.sql", "supabase/migrations/20261026000000_step1_applications.sql", "supabase/migrations/20261027050000_company_research.sql", "supabase/migrations/20261029000000_application_tracker.sql", "supabase/migrations/20261112000000_career_workflows.sql", "tests/sql/career-assertions.sql", "supabase/migrations/20261112000000_career_workflows.sql"]
+    : process.argv.includes("--production")
     ? ["tests/sql/cv-v2-fixture.sql", "supabase/migrations/20261026000000_step1_applications.sql", "supabase/migrations/20261028040000_learning_roadmaps.sql", "tests/sql/production-fixture.sql", "supabase/migrations/20261030000000_production_security.sql", "tests/sql/production-assertions.sql", "supabase/migrations/20261030000000_production_security.sql"]
     : process.argv.includes("--tailoring")
     ? ["tests/sql/cv-v2-fixture.sql", "supabase/migrations/20261026000000_step1_applications.sql", "supabase/migrations/20261027050000_company_research.sql", "supabase/migrations/20261029000000_application_tracker.sql", "supabase/migrations/20261029010000_cv_tailoring.sql", "tests/sql/tailoring-assertions.sql", "supabase/migrations/20261029010000_cv_tailoring.sql"]

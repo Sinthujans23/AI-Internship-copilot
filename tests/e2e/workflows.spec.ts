@@ -3,8 +3,11 @@ test("health, protected routes and login layout",async({page,request})=>{
  const health=await request.get("/api/health");expect(health.status()).toBe(200);expect(await health.json()).toEqual({status:"ok"});
  await page.goto("/dashboard");await expect(page).toHaveURL(/\/login/);await expect(page.getByLabel("Email")).toBeVisible();await expect(page.getByLabel("Password",{exact:true})).toBeVisible();
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBeTruthy();
- for(const endpoint of ["/api/cvs","/api/applications","/api/tailoring","/api/learning","/api/github"]){expect((await request.get(endpoint)).status()).toBe(401);}
- for(const endpoint of ["/api/agent","/api/match","/api/analyze-job","/api/company-research"]){expect((await request.post(endpoint,{data:{}})).status()).toBe(401);}
+ for(const route of ["/interviews","/drafts","/compare"]){await page.goto(route);await expect(page).toHaveURL(/\/login/);}
+ for(const endpoint of ["/api/cvs","/api/applications","/api/tailoring","/api/learning","/api/github","/api/interviews","/api/drafts","/api/jobs/feedback"]){expect((await request.get(endpoint)).status()).toBe(401);}
+ for(const endpoint of ["/api/agent","/api/match","/api/analyze-job","/api/company-research","/api/interviews","/api/drafts","/api/jobs/feedback"]){expect((await request.post(endpoint,{data:{}})).status()).toBe(401);}
+ expect((await request.patch("/api/drafts",{data:{}})).status()).toBe(401);
+ expect((await request.delete("/api/jobs/feedback?url=https%3A%2F%2Fexample.com")).status()).toBe(401);
 });
 test("signup navigation and hostile origin are handled safely",async({page,request})=>{
  await page.goto("/signup");await expect(page.getByLabel("Email")).toBeVisible();await expect(page.getByLabel("Password",{exact:true})).toBeVisible();

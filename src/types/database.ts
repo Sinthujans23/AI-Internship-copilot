@@ -1,6 +1,9 @@
 export type Database = {
   public: {
     Tables: {
+      interview_sessions: {Row:import("@/lib/career/schema").InterviewSession;Insert:Omit<import("@/lib/career/schema").InterviewSession,"id"|"created_at"|"completed_at"|"answers"|"feedback"|"score">;Update:Partial<Pick<import("@/lib/career/schema").InterviewSession,"answers"|"feedback"|"score"|"completed_at">>;Relationships:[]};
+      draft_packs: {Row:import("@/lib/career/schema").DraftPack;Insert:Omit<import("@/lib/career/schema").DraftPack,"id"|"created_at"|"updated_at">;Update:{content:import("@/lib/career/schema").DraftContent;updated_at:string};Relationships:[]};
+      job_feedback: {Row:import("@/lib/career/schema").JobFeedback;Insert:import("@/lib/career/schema").JobFeedback;Update:Partial<import("@/lib/career/schema").JobFeedback>;Relationships:[]};
       cv_tailoring:{Row:import("@/lib/tailoring/schema").TailoringRun;Insert:{user_id:string;cv_id:string;application_id:string;result:import("@/lib/tailoring/schema").TailoringResult};Update:never;Relationships:[]};
       learning_roadmaps:{Row:import("@/lib/learning/schema").SavedRoadmap;Insert:never;Update:never;Relationships:[]};
       learning_tasks:{Row:import("@/lib/learning/schema").LearningTask;Insert:never;Update:never;Relationships:[]};

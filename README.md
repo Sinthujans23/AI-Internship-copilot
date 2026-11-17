@@ -14,8 +14,11 @@ A student workspace for understanding CV evidence, finding relevant internships,
 | `/applications` | Seven-stage Kanban, dates, notes, history and linked preparation |
 | `/tailoring` | Individual review of conservative CV edits and new PDF versions |
 | `/dashboard` | Saved assessments, skills, gaps, activity and next actions |
+| `/interviews` | CV/job-specific mock interviews, rubric feedback and session history |
+| `/drafts` | Editable cover letter, application email and follow-up packs |
+| `/compare` | CV wording differences and linked applications |
 
-Mock interview scores are not recorded; the dashboard explicitly shows that limitation. Matching scores are recommendation relevance, not hiring probabilities. AI suggestions require human review.
+The tracker and dashboard include in-app date reminders and calendar export. Job feedback personalizes listing order; the dashboard shows weekly activity, recorded interview conversion and practice history. Matching scores are recommendation relevance, not hiring probabilities. AI suggestions require human review. Existing installations must apply the [career workflows migration](supabase/migrations/20261112000000_career_workflows.sql); see [feature guide and acceptance checks](docs/CAREER_WORKFLOWS.md).
 
 ## Stack
 

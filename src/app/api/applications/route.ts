@@ -7,7 +7,7 @@ import { createClient } from "@/lib/supabase/server";
 import { applicationSchema, applicationUpdateSchema, applicationChanges } from "@/lib/applications";
 
 // Includes tracker fields; the tracker migration must be installed.
-const columns = "id,user_id,company,role,status,job_text,job_analysis,match_score,match_result,agent_result,created_at,job_url,notes,application_date,interview_date,follow_up_date,cv_id,company_report_id";
+const columns = "id,user_id,company,role,status,job_text,job_analysis,match_score,match_result,agent_result,created_at,job_url,notes,application_date,interview_date,follow_up_date,deadline_date,cv_id,company_report_id";
 export const dynamic = "force-dynamic";
 
 const failure = apiError;

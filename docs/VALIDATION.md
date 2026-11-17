@@ -190,3 +190,11 @@ Production build passed, including type validation and all 23 static pages.
 
 The previous 30-result cutoff is removed. The first 120 preliminary candidates receive semantic evaluation; remaining fetched jobs keep explicit skill/preference-only scores. All fetched eligible jobs remain browsable in ten-card pages. Himalayas fetches three pages per region, with documented bounded coverage. Public and personal cache versions change; partial snapshots are reused for one hour. No hosted migrations, private CV provider calls or authenticated live-browser acceptance tests were performed. No new keys are required. See HYBRID_JOB_MATCHING.md for manual test steps and provider limitations.
 Production build passed, including TypeScript validation and all 23 static pages.
+
+## Step 38: Career workflows (2026-11-12)
+
+Implemented CV/job-based mock interview sessions with five-answer rubric feedback and history; in-app reminders and all-day calendar export; editable persisted application draft packs; CV version text comparison and application links; reversible per-listing relevance/expiry feedback; eight-week application cohorts, recorded interview conversion, all-roadmap learning totals and recurring skill gaps. The additive career workflows migration and regenerated setup SQL are ready; the hosted migration was not applied.
+
+Validation: 152 TypeScript tests passed (including 15 new workflow/service cases). Typecheck, ESLint, the final production build, git diff whitespace check and targeted client-secret scan passed. Playwright reported four anonymous desktop/mobile cases passed and four authenticated cases skipped because dedicated credentials were absent. The runner did not exit after reporting its cases and was interrupted during cleanup; this is not recorded as a clean E2E suite exit.
+
+SQL/RLS assertions and migration-reapplication checks were added under `node scripts/test-cv-v2-db.mjs --career`. Execution was attempted twice, including outside the sandbox after a Docker config access error. Both attempts failed before starting the synthetic database because the Docker engine pipe was unavailable. SQL execution is therefore unverified. No hosted data, live provider calls or authenticated live feature flows were exercised. See CAREER_WORKFLOWS.md for migration instructions, bounds and staging acceptance steps.

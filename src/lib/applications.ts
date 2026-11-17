@@ -17,7 +17,7 @@ const date = z.string().regex(/^\d{4}-\d{2}-\d{2}$/).refine(v => !Number.isNaN(D
 export const trackerFields = z.object({
   job_url: z.string().url().max(2000).refine(safeJobUrl, "Use an HTTP(S) job URL without credentials").transform(canonicalJobUrl).nullable().optional(),
   notes: z.string().max(10000).optional(),
-  application_date: date.optional(), interview_date: date.optional(), follow_up_date: date.optional(),
+  application_date: date.optional(), interview_date: date.optional(), follow_up_date: date.optional(), deadline_date: date.optional(),
   cv_id: z.string().uuid().nullable().optional(), company_report_id: z.string().uuid().nullable().optional(),
 });
 export const applicationSchema = z.object({
@@ -37,7 +37,7 @@ export function filterApplications(rows: ApplicationRow[], query: string, status
   return rows.filter(row => (!status || row.status === status) && `${row.company} ${row.role} ${row.notes || ""}`.toLowerCase().includes(q));
 }
 export type ApplicationRow = Database["public"]["Tables"]["applications"]["Row"];
-export type TrackerFields = {job_url:string|null; notes:string; application_date:string|null; interview_date:string|null; follow_up_date:string|null; cv_id:string|null; company_report_id:string|null};
+export type TrackerFields = {job_url:string|null; notes:string; application_date:string|null; interview_date:string|null; follow_up_date:string|null; deadline_date?:string|null; cv_id:string|null; company_report_id:string|null};
 
 // Changing source text or the selected CV invalidates derived application material.
 export function applicationChanges(input:Omit<z.infer<typeof applicationUpdateSchema>,"id">):Database["public"]["Tables"]["applications"]["Update"]{

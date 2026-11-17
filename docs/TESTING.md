@@ -21,6 +21,7 @@ node scripts/test-cv-v2-db.mjs --learning
 node scripts/test-cv-v2-db.mjs --tracker
 node scripts/test-cv-v2-db.mjs --tailoring
 node scripts/test-cv-v2-db.mjs --production
+node scripts/test-cv-v2-db.mjs --career
 ```
 
 These simulate Supabase auth.uid()/roles; they do not reproduce hosted Storage or Auth infrastructure. Use the two-account production acceptance checklist too.

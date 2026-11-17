@@ -7,12 +7,15 @@ import {rankJobPool} from "@/lib/job-pipeline";
 import { hybridResponseSchema } from "@/lib/hybrid-schema";
 import { preferencesSchema, defaultPreferences } from "@/lib/company/schema";
 import { semanticJobs } from "@/lib/job-semantic";
+import { personalizeJobs } from "@/lib/career/feedback";
 
 export const runtime = "nodejs";
 export const maxDuration = 90;
 export async function POST() {
   try {
     const { supabase, user } = await requireUser();
+    const feedback = await supabase.from("job_feedback").select("*").eq("user_id", user.id).order("updated_at", {ascending:false}).limit(1000);
+    const feedbackWarnings = feedback.error ? ["Job feedback unavailable. Apply the career workflows migration; base ranking is shown."] : [];
     const { data: cv, error } = await supabase.from("cvs").select("id,file_name,skills,extracted_text").eq("user_id", user.id).order("created_at", { ascending: false }).limit(1).maybeSingle();
     if (error) throw error;
     if (!cv) throw new AppError("Upload your CV in CV Profile before searching for matching jobs.", 422);
@@ -23,7 +26,7 @@ export async function POST() {
     const {data:cached,error:cacheError}=await supabase.from("job_match_runs").select("result").eq("user_id",user.id).eq("context_hash",hash).gte("created_at",new Date(Date.now()-3600000).toISOString()).not("result","is",null).order("created_at",{ascending:false}).limit(1).maybeSingle();
     if(cacheError) throw new AppError("Run the hybrid job matching SQL migration in Supabase, then retry.",503);
     const parsedCache=hybridResponseSchema.safeParse(cached?.result);
-    if(parsedCache.success) return NextResponse.json({...parsedCache.data,jobs:eligibleJobs(parsedCache.data.jobs)},{headers:{"Cache-Control":"private, no-store"}});
+    if(parsedCache.success) return NextResponse.json({...parsedCache.data,jobs:personalizeJobs(eligibleJobs(parsedCache.data.jobs),feedback.data||[]),warnings:[...parsedCache.data.warnings,...feedbackWarnings]},{headers:{"Cache-Control":"private, no-store"}});
     const {data:runId,error:reserveError}=await supabase.rpc("reserve_job_match",{p_cv_id:cv.id,p_hash:hash});
     if(reserveError) throw new AppError(reserveError.message.includes("rate limit")?"Job search rate limit reached. Please try later.":"Could not start job matching.",reserveError.message.includes("rate limit")?429:503);
     const feed = await hybridPublicJobs();
@@ -33,6 +36,6 @@ export async function POST() {
     hybridResponseSchema.parse(result);
     const {error:saveError}=await supabase.from("job_match_runs").update({result}).eq("id",runId).eq("user_id",user.id);
     if(saveError) result.warnings.push("Results could not be saved. Your current recommendations are still shown.");
-    return NextResponse.json(result, { headers: { "Cache-Control": "private, no-store" } });
+    return NextResponse.json({...result,jobs:personalizeJobs(result.jobs,feedback.data||[]),warnings:[...result.warnings,...feedbackWarnings]}, { headers: { "Cache-Control": "private, no-store" } });
   } catch (error) { return apiError(error); }
 }
